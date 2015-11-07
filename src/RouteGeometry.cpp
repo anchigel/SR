@@ -32,7 +32,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
    
     for (int layer = 0; layer < nLayers; layer++)
     {
-        
+        cout << "Working on layer: " << layer << endl;
         oaLayerNum layNum = METAL_LAYERS_INFO[layer].layerNum; //LPPHeader->getLayerNum();
         oaPurposeNum purpNum = 1; //LPPHeader->getPurposeNum();
 

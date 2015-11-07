@@ -192,7 +192,7 @@ void MazeRouter::buildGrid() {
     //n = design_height / cell_dim;
     m = design_width / cell_dim_x;
     n = design_height / cell_dim_y;
-    k = 2; //Fixed for two-layer maze routing
+    k = 3; //Fixed for two-layer maze routing
     
     //Next, determine the origin (x0,y0) of the bottom-left-most cell on layer 0, relative to origin of design in DBU
     oaInt4 cell0_x = 0;
@@ -453,14 +453,24 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
                     neighbors.push_back(__grid->at(m,n-1,k));
                 if (n+1 < dim_n)
                     neighbors.push_back(__grid->at(m,n+1,k));
+				 neighbors.push_back(__grid->at(m,n,1)); //above or below
             }
-            else { //top layer, M2, route horizontally only
+            else if (k ==1){ //top layer, M2, route horizontally only
                 if (m-1 >= 0)
                     neighbors.push_back(__grid->at(m-1,n,k));
                 if (m+1 < dim_m)
                     neighbors.push_back(__grid->at(m+1,n,k));
+				 neighbors.push_back(__grid->at(m,n,0)); //above or below
+				 neighbors.push_back(__grid->at(m,n,2)); //above or below
             }
-            neighbors.push_back(__grid->at(m,n,(k+1)%2)); //above or below
+			else {
+				if (n-1 >= 0)
+                    neighbors.push_back(__grid->at(m,n-1,k));
+                if (n+1 < dim_n)
+                    neighbors.push_back(__grid->at(m,n+1,k));
+				 neighbors.push_back(__grid->at(m,n,1)); //above or below
+			}
+            //neighbors.push_back(__grid->at(m,n,(k+1)%2)); //above or below
     
             Cell* next = NULL;
             CellStatus nextstatus;
