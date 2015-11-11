@@ -58,12 +58,26 @@ ProjectDesignRules::ProjectDesignRules(const string designRuleFilename) {
     __minMetalAreaRule *= dbu_factor;
     infile >> __viaDimensionRule;
     __viaDimensionRule *= dbu_factor;
-    if(!infile.eof())
-        infile >> __metal1Direction;
-    if(!infile.eof())
-        infile >> __metal2Direction;
-    if(!infile.eof())
-        infile >> __metal3Direction;
+    char temp;
+    int flag1 = 0;
+    int flag2 = 0;
+    while(!infile.eof()) {
+        infile.get(temp);
+        if(isalpha(temp) && flag1 == 0) {
+            __metal1Direction = temp;
+            flag1 = 1;
+            continue;
+        }
+        if(isalpha(temp) && flag2 == 0) {
+            __metal2Direction = temp;
+            flag2 = 1;
+            continue;
+        }
+        if(isalpha(temp)) {
+            __metal3Direction = temp;
+            return;
+        }
+    }
 }
 
 ProjectDesignRules::~ProjectDesignRules() {}
