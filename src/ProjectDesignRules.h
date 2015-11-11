@@ -28,9 +28,9 @@ public:
     oaUInt4 getContactViaExtensionRule();
     oaUInt4 getViaDimensionRule();
     oaUInt4 getMinMetalAreaRule();
-    oaInt1 getMetal1Direction();
-    oaInt1 getMetal2Direction();
-    oaInt1 getMetal3Direction();
+    char getMetal1Direction();
+    char getMetal2Direction();
+    char getMetal3Direction();
     
     void setMetalWidthRule(oaUInt4 rule);
     void setMetalSpaceRule(oaUInt4 rule);
@@ -46,9 +46,9 @@ private:
     oaUInt4 __contactViaExtensionRule;
     oaUInt4 __viaDimensionRule;
     oaUInt4 __minMetalAreaRule;
-    oaInt1 __metal1Direction;
-    oaInt1 __metal2Direction;
-    oaInt1 __metal3Direction;
+    char __metal1Direction;
+    char __metal2Direction;
+    char __metal3Direction;
     
 };
 

@@ -417,6 +417,8 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 } */
 
 void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIndex1, bool setPin) { //Lee's algorithm
+    //For debugging purposes, debug_out.txt
+    ofstream debugfile ("debug_out.txt");
     //First, choose two endpoints to connect, and set them as source and sink.
     Cell* source = __contactCells[netID][contactIndex0]; 
     Cell* sink = __contactCells[netID][contactIndex1];
@@ -453,6 +455,9 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
             neighbors.clear();
 
             if (k == 0) { //M1
+                debugfile << "getMetal1Direction() = " << __rules->getMetal1Direction() << " and " << 'H' << endl;
+                debugfile << "getMetal2Direction() = " << __rules->getMetal2Direction() << " and " << 'V' << endl;
+                debugfile << "getMetal3Direction() = " << __rules->getMetal3Direction() << " and " << 'B' << endl;
 				if(__rules->getMetal1Direction() == 'V') { //vertical only
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
@@ -588,7 +593,8 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
     } else {
         cout << "DID NOT find a path from Cell (" << sourcem << "," << sourcen << "," << sourcek << ") to (" << sinkm << "," << sinkn << "," << sinkk << ")" << endl;
 		  __foundRoute = false;
-    }   
+    }
+    debugfile.close();
 }
 
 void MazeRouter::doBacktrace(Cell* source, Cell* sink, bool setPin) {

@@ -33,6 +33,9 @@ ProjectDesignRules::ProjectDesignRules() {
 ProjectDesignRules::ProjectDesignRules(const string designRuleFilename) {
     //Read design rules from input file
     //int dbu_factor = 10;
+    __metal1Direction = 'H';
+    __metal2Direction = 'V';
+    __metal3Direction = 'B';
     int dbu_factor = 1;
     ifstream infile;
     infile.open(designRuleFilename.c_str());
@@ -81,13 +84,13 @@ oaUInt4 ProjectDesignRules::getViaDimensionRule() {
     return __viaDimensionRule;
 }
 
-oaInt1 ProjectDesignRules::getMetal1Direction() {
+char ProjectDesignRules::getMetal1Direction() {
     return __metal1Direction;
 }
-oaInt1 ProjectDesignRules::getMetal2Direction() {
+char ProjectDesignRules::getMetal2Direction() {
     return __metal2Direction;
 }
-oaInt1 ProjectDesignRules::getMetal3Direction() {
+char ProjectDesignRules::getMetal3Direction() {
     return __metal3Direction;
 }
 
