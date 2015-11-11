@@ -17,6 +17,9 @@ ProjectDesignRules::ProjectDesignRules() {
     __contactViaExtensionRule = 0;
     __minMetalAreaRule = 0;
     __viaDimensionRule = 0;
+    __metal1Direction = 'H';
+    __metal2Direction = 'V';
+    __metal3Direction = 'B';
 }
 
 /*ProjectDesignRules::ProjectDesignRules(const ProjectDesignRules& orig) {
@@ -52,6 +55,12 @@ ProjectDesignRules::ProjectDesignRules(const string designRuleFilename) {
     __minMetalAreaRule *= dbu_factor;
     infile >> __viaDimensionRule;
     __viaDimensionRule *= dbu_factor;
+    if(!infile.eof())
+        infile >> __metal1Direction;
+    if(!infile.eof())
+        infile >> __metal2Direction;
+    if(!infile.eof())
+        infile >> __metal3Direction;
 }
 
 ProjectDesignRules::~ProjectDesignRules() {}
@@ -71,7 +80,17 @@ oaUInt4 ProjectDesignRules::getMinMetalAreaRule() {
 oaUInt4 ProjectDesignRules::getViaDimensionRule() {
     return __viaDimensionRule;
 }
-    
+
+oaInt1 ProjectDesignRules::getMetal1Direction() {
+    return __metal1Direction;
+}
+oaInt1 ProjectDesignRules::getMetal2Direction() {
+    return __metal2Direction;
+}
+oaInt1 ProjectDesignRules::getMetal3Direction() {
+    return __metal3Direction;
+}
+
 void ProjectDesignRules::setMetalWidthRule(oaUInt4 rule) {
 	__metalWidthRule = rule;
 }
