@@ -453,13 +453,22 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
                     neighbors.push_back(__grid->at(m,n-1,k));
                 if (n+1 < dim_n)
                     neighbors.push_back(__grid->at(m,n+1,k));
+				if (m-1 >= 0)
+                    neighbors.push_back(__grid->at(m-1,n,k));
+                if (m+1 < dim_m)
+                    neighbors.push_back(__grid->at(m+1,n,k));
 				 neighbors.push_back(__grid->at(m,n,1)); //above or below
+				 neighbors.push_back(__grid->at(m,n,2)); //above or below
             }
-            else if (k ==1){ //top layer, M2, route horizontally only
+            else if (k == 1){ //top layer, M2, route horizontally only
                 if (m-1 >= 0)
                     neighbors.push_back(__grid->at(m-1,n,k));
                 if (m+1 < dim_m)
                     neighbors.push_back(__grid->at(m+1,n,k));
+				if (n-1 >= 0)
+                    neighbors.push_back(__grid->at(m,n-1,k));
+                if (n+1 < dim_n)
+                    neighbors.push_back(__grid->at(m,n+1,k));
 				 neighbors.push_back(__grid->at(m,n,0)); //above or below
 				 neighbors.push_back(__grid->at(m,n,2)); //above or below
             }
@@ -468,7 +477,12 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
                     neighbors.push_back(__grid->at(m,n-1,k));
                 if (n+1 < dim_n)
                     neighbors.push_back(__grid->at(m,n+1,k));
+				if (m-1 >= 0)
+                    neighbors.push_back(__grid->at(m-1,n,k));
+                if (m+1 < dim_m)
+                    neighbors.push_back(__grid->at(m+1,n,k));
 				 neighbors.push_back(__grid->at(m,n,1)); //above or below
+				 neighbors.push_back(__grid->at(m,n,0)); //above or below
 			}
             //neighbors.push_back(__grid->at(m,n,(k+1)%2)); //above or below
     
@@ -581,6 +595,18 @@ void MazeRouter::doBacktrace(Cell* source, Cell* sink, bool setPin) {
             tmp->setNeedsVia();
 				//cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
+		else if(currk == 1 && tmpk == 2) {
+			 tmp->setNeedsVia();
+		}
+		else if(currk == 2 && tmpk == 1) {
+			 tmp->setNeedsVia();
+		}
+		else if(currk == 0 && tmpk == 2) {
+			tmp->setNeedsVia();
+		}
+		else if(currk == 2 && tmpk == 0) {
+			tmp->setNeedsVia();
+		}
         
         tmp = curr;
         curr = curr->getBacktrace();
@@ -647,7 +673,7 @@ void MazeRouter::generateKeepout(Cell* c) {
     
     
     //SET LATERAL AND LONGITUDINAL BOUNDS DEPENDING ON LAYER AND LINE END STATUS
-    if (k == 0) { //metal1, runs vertically
+    //if (k == 0) { //metal1, runs vertically
         leftBound = m-__keepoutRadius_lateral;
         if (leftBound < 0)
             leftBound = 0;
@@ -687,7 +713,7 @@ void MazeRouter::generateKeepout(Cell* c) {
             if (bottomBound < 0)
                 bottomBound = 0;
         }
-    } else { //metal2, runs horizontally
+   // } else { //metal2, runs horizontally
         bottomBound = n-__keepoutRadius_lateral;
         if (bottomBound < 0)
             bottomBound = 0;
@@ -721,7 +747,7 @@ void MazeRouter::generateKeepout(Cell* c) {
             if (leftBound < 0)
                 leftBound = 0;
         }
-    }
+   // }
     
 
     for (oaInt4 j = topBound; j >= bottomBound; j--) {
