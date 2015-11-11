@@ -412,9 +412,9 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
     }
 } 
 
-void MazeRouter::multitermRoute(oaUInt4 netID, setPin) {
+/*void MazeRouter::multitermRoute(oaUInt4 netID, setPin) {
 	
-}
+} */
 
 void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIndex1, bool setPin) { //Lee's algorithm
     //First, choose two endpoints to connect, and set them as source and sink.
@@ -465,7 +465,7 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 					if (m+1 < dim_m)
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
-				else { //bidirectional
+				else if(__rules->getMetal1Direction() == 'B') { //bidirectional
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
 					if (n+1 < dim_n)
@@ -479,19 +479,19 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 				 neighbors.push_back(__grid->at(m,n,2)); 
             }
             else if (k == 1){ //M2
-                if(__rules->getMetal1Direction() == 'V') { //vertial only
+                if(__rules->getMetal2Direction() == 'V') { //vertial only
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
 					if (n+1 < dim_n)
 						neighbors.push_back(__grid->at(m,n+1,k));
 				}
-                else if(__rules->getMetal1Direction() == 'H') { //horizontal only
+                else if(__rules->getMetal2Direction() == 'H') { //horizontal only
 					if (m-1 >= 0)
 						neighbors.push_back(__grid->at(m-1,n,k));
 					if (m+1 < dim_m)
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
-				else { //bidirectional
+				else if(__rules->getMetal2Direction() == 'B') { //bidirectional
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
 					if (n+1 < dim_n)
@@ -505,19 +505,19 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 				 neighbors.push_back(__grid->at(m,n,2)); 
             }
 			else { //M3
-				if(__rules->getMetal1Direction() == 'V') { //vertial only
+				if(__rules->getMetal3Direction() == 'V') { //vertial only
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
 					if (n+1 < dim_n)
 						neighbors.push_back(__grid->at(m,n+1,k));
 				}
-                else if(__rules->getMetal1Direction() == 'H') { //horizontal only
+                else if(__rules->getMetal3Direction() == 'H') { //horizontal only
 					if (m-1 >= 0)
 						neighbors.push_back(__grid->at(m-1,n,k));
 					if (m+1 < dim_m)
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
-				else { //bidirectional
+				else if(__rules->getMetal3Direction() == 'B') { //bidirectional
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
 					if (n+1 < dim_n)
@@ -797,7 +797,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 					leftBound = 0;
 			}
 		}
-		else { //bidirectional 
+		else if(__rules->getMetal1Direction() == 'B') { //bidirectional 
 			leftBound = m-__keepoutRadius_lateral;
 			if (leftBound < 0)
 				leftBound = 0;
@@ -874,7 +874,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 		}
 	}
 	if (k == 1) { //metal2
-		if(__rules->getMetal1Direction() == 'V') { //vertical only
+		if(__rules->getMetal2Direction() == 'V') { //vertical only
 			
 			leftBound = m-__keepoutRadius_lateral;
 			if (leftBound < 0)
@@ -916,7 +916,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 					bottomBound = 0;
 			}
 		}
-		else if(__rules->getMetal1Direction() == 'H') { //horizontal only
+		else if(__rules->getMetal2Direction() == 'H') { //horizontal only
 			bottomBound = n-__keepoutRadius_lateral;
 			if (bottomBound < 0)
 				bottomBound = 0;
@@ -951,7 +951,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 					leftBound = 0;
 			}
 		}
-		else { //bidirectional 
+		else if(__rules->getMetal2Direction() == 'B') { //bidirectional 
 			leftBound = m-__keepoutRadius_lateral;
 			if (leftBound < 0)
 				leftBound = 0;
@@ -1028,7 +1028,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 		}
 	}
 	if (k == 2) { //metal3
-		if(__rules->getMetal1Direction() == 'V') { //vertical only
+		if(__rules->getMetal3Direction() == 'V') { //vertical only
 			
 			leftBound = m-__keepoutRadius_lateral;
 			if (leftBound < 0)
@@ -1070,7 +1070,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 					bottomBound = 0;
 			}
 		}
-		else if(__rules->getMetal1Direction() == 'H') { //horizontal only
+		else if(__rules->getMetal3Direction() == 'H') { //horizontal only
 			bottomBound = n-__keepoutRadius_lateral;
 			if (bottomBound < 0)
 				bottomBound = 0;
@@ -1105,7 +1105,7 @@ void MazeRouter::generateKeepout(Cell* c) {
 					leftBound = 0;
 			}
 		}
-		else { //bidirectional 
+		else if(__rules->getMetal3Direction() == 'B') { //bidirectional 
 			leftBound = m-__keepoutRadius_lateral;
 			if (leftBound < 0)
 				leftBound = 0;

@@ -28,7 +28,7 @@ private:
     void initializeGrid(); //enter contact info, power rails
     void routePowerNet(oaInt4 nid); //do special routing of VDD or VSS on Metal1
 	void mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIndex1, bool setPin); //do maze routing of a single net
-    void multitermRoute(oaUInt4 netID, setPin);
+   // void multitermRoute(oaUInt4 netID, bool setPin);
 	void generateKeepouts(oaUInt4 netID); //generate keepout regions for w.r.t. a given net
     void generateKeepout(Cell* c); //Generate keepout region in a radius around a given cell
     void doBacktrace(Cell* source, Cell* sink, bool setPin); //Trace back from sink to source, filling cells as needed. Also do pin selection.
