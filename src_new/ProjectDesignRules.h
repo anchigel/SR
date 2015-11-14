@@ -31,12 +31,15 @@ public:
     char getMetal1Direction();
     char getMetal2Direction();
     char getMetal3Direction();
-    
+
     void setMetalWidthRule(oaUInt4 rule);
     void setMetalSpaceRule(oaUInt4 rule);
     void setContactViaExtensionRule(oaUInt4 rule);
     void setViaDimensionRule(oaUInt4 rule);
     void setMinMetalAreaRule(oaUInt4 rule);
+    bool setMetal1Direction(char dir);
+    bool setMetal2Direction(char dir);
+    bool setMetal3Direction(char dir);
 
     void print();
     
@@ -46,10 +49,9 @@ private:
     oaUInt4 __contactViaExtensionRule;
     oaUInt4 __viaDimensionRule;
     oaUInt4 __minMetalAreaRule;
-    char __metal1Direction;
-    char __metal2Direction;
-    char __metal3Direction;
-    
+    char __metal1_direction; //V, H, or B
+    char __metal2_direction; //V, H, or B
+    char __metal3_direction; //V, H, or B
 };
 
 #endif	/* PROJECTDESIGNRULES_H */

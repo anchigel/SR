@@ -81,9 +81,15 @@ void PostProcessor::Postprocess(Grid* grid, oaDesign* design,
                                     continue;
                                 oaBox mergedBBox;
                                 oaNet* currNet = rect->getNet();
+								bool vertical = false;
+								if(layer == 0 && dr.getMetal1Direction() == 'V')
+									vertical = true;
+								else if(layer == 1 && dr.getMetal2Direction() == 'V')
+									vertical = true;
+									
                                 if (MergeShapes(rect, shapes, design, mergedBBox,
                                     dr.getMetalSpaceRule(),
-                                    METAL_LAYERS_INFO[layer].vertical))
+                                    vertical))
                                 {
                                     //Don't use rect, it will have been destroyed
                                     oaRect* newRect = oaRect::create(topBlock, layNum, purpNum, mergedBBox);
@@ -357,7 +363,14 @@ void PostProcessor::removeUnnecessarySegments(oaDesign* design,
             //Check that they extend only with up to via extension beyond the bounding box both side
             oaBox otherShapeBBox;
             shapesOtherMetalLayer[i]->getBBox(otherShapeBBox);
-            if (METAL_LAYERS_INFO[layerIndex].vertical)
+			
+			bool vertical = false;
+			if(layerIndex == 0 && dr.getMetal1Direction() == 'V')
+				vertical = true;
+			else if(layerIndex == 1 && dr.getMetal2Direction() == 'V')
+				vertical = true;
+			
+            if (vertical)
             {
                
                 int bottom = mergedBBox.bottom() - dr.getContactViaExtensionRule();
