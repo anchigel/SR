@@ -27,7 +27,7 @@ public:
                               oaDesign* design);
 private:
     //ideally this fn should be in Grid, but I'm leaving it here for now
-    Cell* GetCell(Grid* grid,ProjectDesignRules dr,int firstDimIndex, 
+    Cell* GetCell(Grid* grid,METAL_LAYER_INFO layerInfo,int firstDimIndex, 
                                                         int secDimIndex,
                                                         int layerIndex);
    

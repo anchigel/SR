@@ -131,6 +131,13 @@ oaDesign* InputOutputManipulator::ReadOADesign(DesignInfo designInfo)
       cout << "Creating via1 layer\n";
       oaPhysicalLayer::create(tech, "via1", VIA_LAYER_NUMBERS[0], oacMetalMaterial, 11);
     }
+	// check if via2 layer is in the database
+    layer =  oaLayer::find(tech, "via2");
+    if (layer==NULL) 
+    {
+      cout << "Creating via1 layer\n";
+      oaPhysicalLayer::create(tech, "via2", VIA_LAYER_NUMBERS[1], oacMetalMaterial, 13);
+    }
     // check if metal2 layer is in the database
     layer =  oaLayer::find(tech, "metal2");
     if (layer==NULL) 
@@ -138,6 +145,14 @@ oaDesign* InputOutputManipulator::ReadOADesign(DesignInfo designInfo)
       cout << "Creating metal2 layer\n";
       oaPhysicalLayer::create(tech, "metal2", METAL_LAYERS_INFO[1].layerNum, 
                               oacMetalMaterial, METAL_LAYERS_INFO[1].layerNum);
+    }
+	// check if metal3 layer is in the database
+    layer =  oaLayer::find(tech, "metal3");
+    if (layer==NULL) 
+    {
+      cout << "Creating metal3 layer\n";
+      oaPhysicalLayer::create(tech, "metal3", METAL_LAYERS_INFO[2].layerNum, 
+                              oacMetalMaterial, METAL_LAYERS_INFO[2].layerNum);
     }
     //oaRect::create(view->getTopBlock(), 11,1,oaBox(0,0,200,200));
     //save tech

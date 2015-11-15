@@ -200,7 +200,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
         int wireWidth = dr.getMetalWidthRule();
         unsigned int w, h;
         grid->getCellDims(&w, &h);
-		bool vertical = false;
+		/*bool vertical = false;
 		if(layer == 0) {
 			if(dr.getMetal1Direction() == 'V')
 				vertical == true;
@@ -212,8 +212,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 		else if(layer == 2) {
 			if(dr.getMetal3Direction() == 'V')
 				vertical == true;
-		}
-        if (vertical)
+		}*/
+        if (layerInfo.vertical)
         {
             nTilesFirstDim = nHorizTiles;
             nTilesSecondDim = nVerticTiles;
@@ -240,11 +240,11 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                 //tiles along the routing layer direction
 
                 //1-Skip non-occupied cells till we get to first filled cell
-                Cell* currCell = GetCell(grid, dr, firstDim, secDim, layer);
+                Cell* currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
                 while (!(currCell->getStatus() == CellFilled || currCell->getStatus() == CellContact)
                        && secDim < nTilesSecondDim)                      
 				{
-                    currCell = GetCell(grid, dr, firstDim, secDim, layer);
+                    currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
                     secDim++;
                   	if(currCell->getStatus() == CellVDDRail || currCell->getStatus() == CellVSSRail) {
 						 oaNet* currNet=NULL;
@@ -269,6 +269,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                 if (secDim < nTilesSecondDim)//check that we found filled cell
                     //and not that we went out of bounds
                 {
+					bool via_is_set = false;
                     int left, bottom, right, top;
                     //Now we have found the first filled cell==>Get its center             
                     //Found start point: get left and bottom of rectangle starting point
@@ -289,26 +290,22 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     if(!currNet)//if not already created
                          currNet=oaNet::create(topBlock, netName);
 					
-					if(currCell->needsVia())
+					if(currCell->needsVia() && !via_is_set)
                     {  
 						oaRect* via=createVia(currCell, dr,design);
                         if(currNet==NULL)
 							cerr<<"currNet is NULL"<<endl;
                         else via->addToNet(currNet);
+						via_is_set = true;
                     }
 					
                     /*If the first cell is a contact, then extend with contact width*/
                     /* also handle via extension*/
-                    if (currCell->getStatus() == CellContact
-                        || viaExtensionNeeded
-                        )
+                    if (currCell->getStatus() == CellContact|| viaExtensionNeeded)
                         //|| isBackTraceOfCellAdjLayer(currCell, grid,2,
                         //                                cellAdjLayer))//has via below/above it)
                     {
-                        
-                       
-                    
-                        if (vertical)
+                        if (layerInfo.vertical)
                         {
                             bottom = yCenter - dr.getViaDimensionRule() / 2
                                     - dr.getContactViaExtensionRule();
@@ -338,7 +335,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         int tempX, tempY;
                         currCell->getAbsolutePosition(&tempX,&tempY);
                         
-                        if(currCell->needsVia())
+                        if(currCell->needsVia() && !via_is_set)
                         {
                             
                              oaRect* via=createVia(currCell, dr,design);
@@ -353,7 +350,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                             //Create pin label
                             CreatePinTextLabel(currCell, design,dr);
                         }
-                        currCell = GetCell(grid, dr, firstDim, secDim, layer);
+                        currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
                         secDim++;
                         
                     }
@@ -361,10 +358,10 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     //endpoint should be the last cell
                     if(currCell->getNetID()!=currNetID)
                     {     
-                        currCell = GetCell(grid, dr, firstDim, secDim, layer);   
+                        currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);   
                         secDim++;
                     }
-                    else currCell = GetCell(grid, dr, firstDim, secDim - 2, layer);
+                    else currCell = GetCell(grid, layerInfo, firstDim, secDim - 2, layer);
                    
                     currCell->getAbsolutePosition(&xCenter, &yCenter);
                    
@@ -383,7 +380,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         //   || isBackTraceOfCellAdjLayer(currCell, grid,2,cellAdjLayer)//has via below/above it
                         )
                     {
-                        if (vertical)
+                        if (layerInfo.vertical)
                         {
                             //extend by half via and extension
                             top = yCenter + dr.getViaDimensionRule() / 2
@@ -422,11 +419,11 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 //as first dimension (perpendicular to routing direction)
 //and second dimension (parallel to routing direction)
 
-Cell* RouteGeometry::GetCell(Grid* grid, ProjectDesignRules dr,
+Cell* RouteGeometry::GetCell(Grid* grid, METAL_LAYER_INFO layerInfo,
         int firstDimIndex, int secDimIndex,
         int layerIndex)
 {
-	bool vertical = false;
+	/*bool vertical = false;
 	if(layerIndex == 0) {
 		if(dr.getMetal1Direction() == 'V')
 			vertical == true;
@@ -438,9 +435,9 @@ Cell* RouteGeometry::GetCell(Grid* grid, ProjectDesignRules dr,
 	else if(layerIndex == 2) {
 		if(dr.getMetal3Direction() == 'V')
 			vertical == true;
-	}
+	}*/
 
-    if (vertical)
+    if (layerInfo.vertical)
     {
         //vertical so first dim is horiz, and second dim is vertical
         return grid->at(firstDimIndex, secDimIndex, layerIndex);

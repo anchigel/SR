@@ -53,9 +53,9 @@ int main(int argc, char** argv)
     cout << "Reading design rules..." << endl;
     ProjectDesignRules designRules(designInfo.DRFileName); 
     designRules.print();
-	METAL_LAYERS_INFO[0].vertical = ((designRules.getMetal1Direction() == 'V') || (designRules.getMetal1Direction() == 'B'));
-	METAL_LAYERS_INFO[1].vertical = ((designRules.getMetal2Direction() == 'V') || (designRules.getMetal2Direction() == 'B'));
-	METAL_LAYERS_INFO[2].vertical = ((designRules.getMetal3Direction() == 'V') || (designRules.getMetal3Direction() == 'B'));
+	METAL_LAYERS_INFO[0].vertical = ((designRules.getMetal1Direction() == 'V'));
+	METAL_LAYERS_INFO[1].vertical = ((designRules.getMetal2Direction() == 'V'));
+	METAL_LAYERS_INFO[2].vertical = ((designRules.getMetal3Direction() == 'V'));
     
     //now, read the netlist input
     cout << "Reading netlist..." << endl;
