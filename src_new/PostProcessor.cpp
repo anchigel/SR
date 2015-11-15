@@ -365,9 +365,9 @@ void PostProcessor::removeUnnecessarySegments(oaDesign* design,
             shapesOtherMetalLayer[i]->getBBox(otherShapeBBox);
 			
 			bool vertical = false;
-			if(layerIndex == 0 && dr.getMetal1Direction() == 'V' || layerIndex == 0 && dr.getMetal1Direction() == 'B')
+			if(layerIndex == 0 && dr.getMetal1Direction() == 'V')
 				vertical = true;
-			else if(layerIndex == 1 && dr.getMetal2Direction() == 'V' || layerIndex == 1 && dr.getMetal2Direction() == 'B')
+			else if(layerIndex == 1 && dr.getMetal2Direction() == 'V')
 				vertical = true;
 			
             if (vertical)
