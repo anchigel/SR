@@ -202,15 +202,15 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
         grid->getCellDims(&w, &h);
 		bool vertical = false;
 		if(layer == 0) {
-			if(dr.getMetal1Direction() == 'V' || dr.getMetal1Direction() == 'B')
+			if(dr.getMetal1Direction() == 'V')
 				vertical == true;
 		}
 		else if(layer == 1) {
-			if(dr.getMetal2Direction() == 'V' || dr.getMetal2Direction() == 'B')
+			if(dr.getMetal2Direction() == 'V')
 				vertical == true;
 		}
 		else if(layer == 2) {
-			if(dr.getMetal3Direction() == 'V' || dr.getMetal3Direction() == 'B')
+			if(dr.getMetal3Direction() == 'V')
 				vertical == true;
 		}
         if (vertical)
@@ -241,17 +241,30 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 
                 //1-Skip non-occupied cells till we get to first filled cell
                 Cell* currCell = GetCell(grid, dr, firstDim, secDim, layer);
-                while (!(currCell->getStatus() == CellFilled
-
-                       || currCell->getStatus() == CellContact
-                       )
-                       && secDim < nTilesSecondDim)
-		                      
-{
+                while (!(currCell->getStatus() == CellFilled || currCell->getStatus() == CellContact)
+                       && secDim < nTilesSecondDim)                      
+				{
                     currCell = GetCell(grid, dr, firstDim, secDim, layer);
                     secDim++;
-                  			
+                  	if(currCell->getStatus() == CellVDDRail || currCell->getStatus() == CellVSSRail) {
+						 oaNet* currNet=NULL;
+						//create net
+						char netNameCharP[25];
+						snprintf(netNameCharP, sizeof (currCell->getNetID()), "%d", 
+                             currCell->getNetID());
 
+						oaName netName(ns,netNameCharP);
+						currNet=oaNet::find(topBlock, netName);
+						if(!currNet)//if not already created
+							 currNet=oaNet::create(topBlock, netName);
+						 if(currCell->needsVia())
+                        {
+                             oaRect* via=createVia(currCell, dr,design);
+                            if(currNet==NULL)
+                                cerr<<"currNet is NULL"<<endl;
+                            else via->addToNet(currNet);
+                        }
+					}
                 }
                 if (secDim < nTilesSecondDim)//check that we found filled cell
                     //and not that we went out of bounds
@@ -275,6 +288,15 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     currNet=oaNet::find(topBlock, netName);
                     if(!currNet)//if not already created
                          currNet=oaNet::create(topBlock, netName);
+					
+					if(currCell->needsVia())
+                    {  
+						oaRect* via=createVia(currCell, dr,design);
+                        if(currNet==NULL)
+							cerr<<"currNet is NULL"<<endl;
+                        else via->addToNet(currNet);
+                    }
+					
                     /*If the first cell is a contact, then extend with contact width*/
                     /* also handle via extension*/
                     if (currCell->getStatus() == CellContact
@@ -406,15 +428,15 @@ Cell* RouteGeometry::GetCell(Grid* grid, ProjectDesignRules dr,
 {
 	bool vertical = false;
 	if(layerIndex == 0) {
-		if(dr.getMetal1Direction() == 'V' || dr.getMetal1Direction() == 'B')
+		if(dr.getMetal1Direction() == 'V')
 			vertical == true;
 	}
 	else if(layerIndex == 1) {
-		if(dr.getMetal2Direction() == 'V' || dr.getMetal2Direction() == 'B')
+		if(dr.getMetal2Direction() == 'V')
 			vertical == true;
 	}
 	else if(layerIndex == 2) {
-		if(dr.getMetal3Direction() == 'V' || dr.getMetal3Direction() == 'B')
+		if(dr.getMetal3Direction() == 'V')
 			vertical == true;
 	}
 

@@ -121,8 +121,8 @@ bool MazeRouter::route() {
                 else   
                    mazeRoute(net, closestPairs[pairIndex].getIndex1(),
                                    closestPairs[pairIndex].getIndex2(), false);
-            }
-            */
+            }*/
+            
         }
     }
     
@@ -178,7 +178,7 @@ void MazeRouter::buildGrid() {
    
     m = design_width / cell_dim_x;
     n = design_height / cell_dim_y;
-    k = 3; //Fixed for two-layer maze routing
+    k = 2; //Fixed for two-layer maze routing
     
     //Next, determine the origin (x0,y0) of the bottom-left-most cell on layer 0, relative to origin of design in DBU
     oaInt4 cell0_x = 0;
@@ -309,14 +309,28 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
             oaUInt4 net_id2 = vdd_vss->getNetID();
 			
 			//Check cell underneath to see it it's vdd or vss
-			if(layer != 0) {
+			if(layer == 1) {
 				if(status2 == CellVDDRail && nid == VDD_NET_ID) {
 					done = true;
+					/*__grid->at(m,j+1,layer)->setBacktrace(__grid->at(m,j,layer));
+					__grid->at(m,j+2,layer)->setBacktrace(__grid->at(m,j+1,layer));
+					__grid->at(m,j+3,layer)->setBacktrace(__grid->at(m,j+2,layer));
+					__grid->at(m,j+4,layer)->setBacktrace(__grid->at(m,j+3,layer));
+					__grid->at(m,j+5,layer)->setBacktrace(__grid->at(m,j+4,layer));
+					__grid->at(m,j+5,0)->setBacktrace(__grid->at(m,j+5,layer));
+					__grid->at(m,j+5,0)->setNeedsVia();*/
 					vdd_vss->setNeedsVia();
 					vdd_vss->setBacktrace(curr);
 				}
 				else if(status2 == CellVSSRail && nid == VSS_NET_ID) {
 					done = true;
+					/*__grid->at(m,j-1,layer)->setBacktrace(__grid->at(m,j,layer));
+					__grid->at(m,j-2,layer)->setBacktrace(__grid->at(m,j-1,layer));
+					__grid->at(m,j-3,layer)->setBacktrace(__grid->at(m,j-2,layer));
+					__grid->at(m,j-4,layer)->setBacktrace(__grid->at(m,j-3,layer));
+					__grid->at(m,j-5,layer)->setBacktrace(__grid->at(m,j-4,layer));
+					__grid->at(m,j-5,0)->setBacktrace(__grid->at(m,j-5,layer));
+					__grid->at(m,j-5,0)->setNeedsVia();*/
 					vdd_vss->setNeedsVia();
 					vdd_vss->setBacktrace(curr);
 				}
@@ -342,7 +356,7 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 							curr->setNeedsVia();
 							done = true;
 						}*/
-                        done = true;
+                       done = true;
 					}
                     else {
                         cout << "Somehow hit the VDD rail while routing VSS!" << endl;
@@ -370,7 +384,7 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 							curr->setNeedsVia();
 							done = true;
 						}*/
-                        done = true;
+                      done = true;
 					}
                     else {
                         cout << "Somehow hit the VSS rail while routing VDD!" << endl;
@@ -425,7 +439,131 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
             }
         }       
     }
-} 
+} /*
+void MazeRouter::routePowerNet(oaInt4 nid) {
+    //We assume that each contact that needs to connect to VDD can route directly up in Metal1.
+    //We assume that each contact that needs to connect to VSS can route directly down in Metal1.
+    //This appears reasonable with the given test cases, and the knowledge of P/N diffusion regions and normal CMOS logic.
+    oaUInt4 dim_m, dim_n, dim_k = 0;
+    __grid->getDims(&dim_m, &dim_n, &dim_k);
+
+    //cout << "In routePowerNet! dim_m = " << dim_m << " dim_n = " << dim_n << endl; //Weiche
+    //Let's loop through all contacts that are on the net, and generate their routes one-by-one.
+    for (oaInt4 i = 0; i < __contactCells[nid].size(); i++) {
+        Cell* contact = __contactCells[nid][i];
+        oaUInt4 m,n,k = 0;
+        contact->getPosition(&m, &n, &k);
+        oaInt4 j = n;
+        bool done = false;
+		//int nCellsInRail=11; //Weiche
+		//int nCellsInRail=0; //Weiche	
+			while (!done) { //Iterate through cells until we hit a rail
+            //cout<<"before at m="<<m<<" j="<<j<<" k="<<k<<endl; //Weiche
+			Cell* curr = __grid->at(m,j,k);
+            //cout<<"after at m="<<m<<" j="<<j<<" k="<<k; //Weiche
+			CellStatus status = curr->getStatus();
+            oaUInt4 net_id = curr->getNetID();
+
+            switch (status) {
+                case CellVDDRail:
+				//cout<<"  case CellVDDRail"<<endl; //Weiche
+                    if (nid == VDD_NET_ID)
+					{
+						/*if(nCellsInRail>0) //Weiche
+						{
+							curr->setStatus(CellFilled);
+			                curr->setNetType(contact->getNetType());
+				            curr->setNetID(nid);
+							nCellsInRail--;
+							if(nCellsInRail==5)
+								curr->setNeedsVia();
+						}*/
+						/*if(nCellsInRail==0){ //Weiche
+							curr->setStatus(CellFilled);
+			                curr->setNetType(contact->getNetType());
+				            curr->setNetID(nid);
+							curr->setNeedsVia();
+							done = true;
+						}*/
+        /*                done = true;
+					}
+                    else {
+                        cout << "Somehow hit the VDD rail while routing VSS!" << endl;
+						__foundRoute = false;
+                        //__grid->print();
+                        exit(1);
+                    }
+                    break;
+                case CellVSSRail:
+                    //cout<<"  case CellVSSRail"<<endl; //Weiche
+                    if (nid == VSS_NET_ID){
+						/*if(nCellsInRail>0) //Weiche
+						{
+							curr->setStatus(CellFilled);
+			                curr->setNetType(contact->getNetType());
+				            curr->setNetID(nid);
+							nCellsInRail--;
+							if(nCellsInRail==5)
+								curr->setNeedsVia();
+						}*/
+						/* if(nCellsInRail==0){ //Weiche
+							curr->setStatus(CellFilled);
+			                curr->setNetType(contact->getNetType());
+				            curr->setNetID(nid);
+							curr->setNeedsVia();
+							done = true;
+						}*/
+     /*                   done = true;
+					}
+                    else {
+                        cout << "Somehow hit the VSS rail while routing VDD!" << endl;
+						__foundRoute = false;
+                        //__grid->print();
+                        exit(1);
+                    }
+                    break;
+                case CellFilled:
+                    //cout<<"  case CellFilled"<<endl; //Weiche
+                case CellContact:
+				    //cout<<"  case CellContact"<<endl; //Weiche
+                    if (net_id != nid) {
+						//cout << "net_id = " << net_id << " nid = " << nid << endl; //Weiche
+                        cout << "We have a problem routing power net " << contact->getNetType() << "! We hit an occupied cell that wasn't ours. Here's the Grid." << endl;
+						__foundRoute = false;
+                        //cout<<"m: "<<m<<", j: "<<j<<", k: "<<k<<endl; //Weiche
+						//__grid->print();
+                        exit(1);
+                    }
+                    break;
+                case CellKeepout:
+				    //cout<<"  case CellKeepout"<<endl; //Weiche
+                    cout << "We have a problem routing power net " << contact->getNetType() << "! We hit a keepout region. Here's the Grid." << endl;
+                    __foundRoute = false;
+                    __grid->print();
+                    exit(1);
+                    break;
+                case CellFree:
+				    //cout<<"  case CellFree"<<endl; //Weiche
+                    curr->setStatus(CellFilled);
+                    curr->setNetType(contact->getNetType());
+                    curr->setNetID(nid);
+                    break;
+            }
+                       
+            if (nid == VDD_NET_ID) {
+                //create backtrace
+                if (i > 0)
+                    curr->setBacktrace(__grid->at(m,j-1,k));
+                j++;
+            } else {
+                //create backtrace
+                if (i > 0)
+                    curr->setBacktrace(__grid->at(m,j+1,k));
+                j--;
+            }
+        }       
+    }
+}*/
 
 void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIndex1, bool setPin) { //Lee's algorithm
     //First, choose two endpoints to connect, and set them as source and sink.
@@ -477,17 +615,17 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
 				else if(__rules->getMetal1Direction() == 'B') { //bidirectional
-					if (n-1 >= 0)
-						neighbors.push_back(__grid->at(m,n-1,k));
-					if (n+1 < dim_n)
-						neighbors.push_back(__grid->at(m,n+1,k));
 					if (m-1 >= 0)
 						neighbors.push_back(__grid->at(m-1,n,k));
 					if (m+1 < dim_m)
 						neighbors.push_back(__grid->at(m+1,n,k));
+					if (n-1 >= 0)
+						neighbors.push_back(__grid->at(m,n-1,k));
+					if (n+1 < dim_n)
+						neighbors.push_back(__grid->at(m,n+1,k));
 				}
 				neighbors.push_back(__grid->at(m,n,1));
-				neighbors.push_back(__grid->at(m,n,2));
+				//neighbors.push_back(__grid->at(m,n,2));
             }
             else if(k == 1){ //M2
 				if(__rules->getMetal2Direction() == 'V') { //vertial only
@@ -513,7 +651,7 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 						neighbors.push_back(__grid->at(m,n+1,k));
 				}
 				neighbors.push_back(__grid->at(m,n,0)); 
-				neighbors.push_back(__grid->at(m,n,2));
+				//neighbors.push_back(__grid->at(m,n,2));
             }
 			else if(k == 2){ //M3
 				if(__rules->getMetal3Direction() == 'V') { //vertial only
@@ -539,7 +677,7 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
 				 neighbors.push_back(__grid->at(m,n,1)); 
-				 neighbors.push_back(__grid->at(m,n,0)); 
+				 //neighbors.push_back(__grid->at(m,n,0)); 
 			}
             //neighbors.push_back(__grid->at(m,n,(k+1)%2)); //above or below
     
@@ -653,26 +791,26 @@ void MazeRouter::doBacktrace(Cell* source, Cell* sink, bool setPin) {
             tmp->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
-		else if (currk == 2 && tmpk == 0) { //change from layer 0 to layer 2
+	/*	else if (currk == 2 && tmpk == 0) { //change from layer 0 to layer 2
             //set via on tmp, which is M1.
             tmp->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
 		else if (currk == 0 && tmpk == 2) { //change from layer 2 to layer 0
             //set via on tmp, which is M1.
-            tmp->setNeedsVia();
+            curr->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
 		else if (currk == 1 && tmpk == 2) { //change from layer 2 to layer 1
             //set via on tmp, which is M1.
-            tmp->setNeedsVia();
+            curr->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
 		else if (currk == 2 && tmpk == 1) { //change from layer 1 to layer 2
             //set via on tmp, which is M1.
             tmp->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
-        }
+        }*/
         
         tmp = curr;
         curr = curr->getBacktrace();
@@ -816,79 +954,112 @@ void MazeRouter::generateKeepout(Cell* c) {
 					leftBound = 0;
 			}
 		}
-		else if(__rules->getMetal1Direction() == 'B') { //bidirectional 
-			leftBound = m-__keepoutRadius_lateral;
-			if (leftBound < 0)
-				leftBound = 0;
+		else { //bidirectional 
+			Cell* tmptop;
+			Cell* tmpbottom;
+			Cell* tmpleft;
+			Cell* tmpright;
+			CellStatus tmptops;
+			CellStatus tmpbottoms;
+			CellStatus tmplefts;
+			CellStatus tmprights;
+			bool isVertical = false;
 			
-			rightBound = m+__keepoutRadius_lateral;
-			if (rightBound > dim_m-1)
-				rightBound = dim_m-1;
-			
-			//check line end top condition
-			if (n+1 < dim_n) {
-				tmp = __grid->at(m,n+1,k); //get cell above
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
+			//check cell above
+			if (n + 1 < dim_n) {
+				tmptop = __grid->at(m, n + 1, k);
+				tmptops = tmptop->getStatus();
+				if (tmptops == CellFilled || tmptops == CellContact){ //not line end
 					topBound = n;
-				else { //line end
-					if (cStatus == CellVDDRail || cStatus == CellVSSRail) //cell of interest is power rail
-						 topBound = n+__keepoutRadius_powerRail;
-					else //cell of interest is regular net
-						 topBound = n+__keepoutRadius_longitudinal;
+					isVertical = true;
 				}
-				if (topBound > dim_n-1)
-					topBound = dim_n-1;
-			}
-			
-			//check line end bottom condition
-			if (n-1 >= 0) {
-				tmp = __grid->at(m,n-1,k); //get cell below
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
-					bottomBound = n;
 				else { //line end
 					if (cStatus == CellVDDRail || cStatus == CellVSSRail) //cell of interest is power rail
-							bottomBound = n-__keepoutRadius_powerRail;
-					else //cell of interest is regular net
-							bottomBound = n-__keepoutRadius_longitudinal;
+						topBound = n + __keepoutRadius_powerRail;
+					else //regular cell
+						topBound = n + __keepoutRadius_longitudinal;
+				}
+				if (topBound > dim_n - 1)
+					topBound = dim_n - 1;
+			}
+			//check cell below
+			if (n - 1 >= 0) {
+				tmpbottom = __grid->at(m, n - 1, k);
+				tmpbottoms = tmpbottom->getStatus();
+				if (tmpbottoms == CellFilled || tmpbottoms == CellContact){ //not line end
+					bottomBound = n;
+					isVertical = true;
+				}
+				else { //line end
+					if (cStatus == CellVDDRail || cStatus == CellVSSRail) //cell of interest is power rail
+						bottomBound = n - __keepoutRadius_powerRail;
+					else
+						bottomBound = n - __keepoutRadius_longitudinal;
 				}
 				if (bottomBound < 0)
 					bottomBound = 0;
 			}
-			
-			bottomBound = n-__keepoutRadius_lateral;
-			if (bottomBound < 0)
-				bottomBound = 0;
-			
-			topBound = n+__keepoutRadius_lateral;
-			if (topBound > dim_n-1)
-				topBound = dim_n-1;
-			
-			//check line end right condition
-			if (m+1 < dim_m) {
-				tmp = __grid->at(m+1,n,k); //get cell to right
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
-					rightBound = m;
-				else //line end
-					rightBound = m+__keepoutRadius_longitudinal;
-				
-				if (rightBound > dim_m-1)
-					rightBound = dim_m-1;
+
+			//Vertical segment - bounds on left and right sides
+			if (isVertical) {
+				//left side
+				if (m - 1 >= 0) {
+					tmpleft = __grid->at(m - 1, n, k);
+					tmplefts = tmpleft->getStatus();
+					if (tmplefts == CellFilled || tmplefts == CellContact) { //right corner connecting vertical and horizontal segments
+						leftBound = m;
+					}
+					else { //left side is empty
+						leftBound = m - __keepoutRadius_lateral;
+						if (leftBound < 0)
+							leftBound = 0;
+					}
+				}
+
+				//right side
+				if (m + 1 < dim_m) {
+					tmpright = __grid->at(m + 1, n, k);
+					tmprights = tmpright->getStatus();
+					if (tmprights == CellFilled || tmprights == CellContact) { //left corner connecting vertical and horizontal segments
+						rightBound = m;
+					}
+					else { //right side is empty
+						rightBound = m + __keepoutRadius_lateral;
+						if (rightBound > dim_m - 1)
+							rightBound = dim_m - 1;
+					}
+				}
 			}
-			
-			//check line end left condition
-			if (m-1 >= 0) {
-				tmp = __grid->at(m-1,n,k); //get cell to left
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
-					leftBound = m;
-				else //line end
-					leftBound = m-__keepoutRadius_longitudinal;
-				
-				if (leftBound < 0)
-					leftBound = 0;
+
+			//if not verical then it's horizontal
+			if (!isVertical) {
+				if (m - 1 >= 0) {
+					tmpleft = __grid->at(m - 1, n, k);
+					tmplefts = tmpleft->getStatus();
+					if (tmplefts == CellFilled || tmplefts == CellContact) //not line end
+						leftBound = m;
+					else //line end
+						leftBound = m - __keepoutRadius_longitudinal;
+					if (leftBound < 0)
+						leftBound = 0;
+				}
+
+				if (m + 1 < dim_m) {
+					tmpright = __grid->at(m + 1, n, k);
+					tmprights = tmpright->getStatus();
+					if (tmprights == CellFilled || tmprights == CellContact) //not line end
+						rightBound = m;
+					else //line end
+						rightBound = m + __keepoutRadius_longitudinal;
+					if (rightBound > dim_m - 1)
+						rightBound = dim_m - 1;
+				}
+				topBound = n + __keepoutRadius_lateral;
+				if (topBound > dim_n - 1)
+					topBound = dim_n - 1;
+				bottomBound = n - __keepoutRadius_lateral;
+				if (bottomBound < 0)
+					bottomBound = 0;
 			}
 		}
 	}
@@ -971,78 +1142,111 @@ void MazeRouter::generateKeepout(Cell* c) {
 			}
 		}
 		else if(__rules->getMetal2Direction() == 'B') { //bidirectional 
-			leftBound = m-__keepoutRadius_lateral;
-			if (leftBound < 0)
-				leftBound = 0;
+			Cell* tmptop;
+			Cell* tmpbottom;
+			Cell* tmpleft;
+			Cell* tmpright;
+			CellStatus tmptops;
+			CellStatus tmpbottoms;
+			CellStatus tmplefts;
+			CellStatus tmprights;
+			bool isVertical = false;
 			
-			rightBound = m+__keepoutRadius_lateral;
-			if (rightBound > dim_m-1)
-				rightBound = dim_m-1;
-			
-			//check line end top condition
-			if (n+1 < dim_n) {
-				tmp = __grid->at(m,n+1,k); //get cell above
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
+			//top
+			if (n + 1 < dim_n) {
+				tmptop = __grid->at(m, n + 1, k);
+				tmptops = tmptop->getStatus();
+				if (tmptops == CellFilled || tmptops == CellContact){ //not line end
 					topBound = n;
-				else { //line end
-					if (cStatus == CellVDDRail || cStatus == CellVSSRail) //cell of interest is power rail
-						 topBound = n+__keepoutRadius_powerRail;
-					else //cell of interest is regular net
-						 topBound = n+__keepoutRadius_longitudinal;
+					isVertical = true;
 				}
-				if (topBound > dim_n-1)
-					topBound = dim_n-1;
-			}
-			
-			//check line end bottom condition
-			if (n-1 >= 0) {
-				tmp = __grid->at(m,n-1,k); //get cell below
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
-					bottomBound = n;
 				else { //line end
 					if (cStatus == CellVDDRail || cStatus == CellVSSRail) //cell of interest is power rail
-							bottomBound = n-__keepoutRadius_powerRail;
-					else //cell of interest is regular net
-							bottomBound = n-__keepoutRadius_longitudinal;
+						topBound = n + __keepoutRadius_powerRail;
+					else //regular cell
+						topBound = n + __keepoutRadius_longitudinal;
+				}
+				if (topBound > dim_n - 1)
+					topBound = dim_n - 1;
+			}
+			//bottom
+			if (n - 1 >= 0) {
+				tmpbottom = __grid->at(m, n - 1, k);
+				tmpbottoms = tmpbottom->getStatus();
+				if (tmpbottoms == CellFilled || tmpbottoms == CellContact){ //not line end
+					bottomBound = n;
+					isVertical = true;
+				}
+				else { //line end
+					if (cStatus == CellVDDRail || cStatus == CellVSSRail) //cell of interest is power rail
+						bottomBound = n - __keepoutRadius_powerRail;
+					else
+						bottomBound = n - __keepoutRadius_longitudinal;
 				}
 				if (bottomBound < 0)
 					bottomBound = 0;
 			}
-			
-			bottomBound = n-__keepoutRadius_lateral;
-			if (bottomBound < 0)
-				bottomBound = 0;
-			
-			topBound = n+__keepoutRadius_lateral;
-			if (topBound > dim_n-1)
-				topBound = dim_n-1;
-			
-			//check line end right condition
-			if (m+1 < dim_m) {
-				tmp = __grid->at(m+1,n,k); //get cell to right
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
-					rightBound = m;
-				else //line end
-					rightBound = m+__keepoutRadius_longitudinal;
-				
-				if (rightBound > dim_m-1)
-					rightBound = dim_m-1;
+
+			//Vertical segment - bounds on left and right sides
+			if (isVertical) {
+				//left side
+				if (m - 1 >= 0) {
+					tmpleft = __grid->at(m - 1, n, k);
+					tmplefts = tmpleft->getStatus();
+					if (tmplefts == CellFilled || tmplefts == CellContact) { //right corner connecting vertical and horizontal segments
+						leftBound = m;
+					}
+					else { //left side is empty
+						leftBound = m - __keepoutRadius_lateral;
+						if (leftBound < 0)
+							leftBound = 0;
+					}
+				}
+
+				//right side
+				if (m + 1 < dim_m) {
+					tmpright = __grid->at(m + 1, n, k);
+					tmprights = tmpright->getStatus();
+					if (tmprights == CellFilled || tmprights == CellContact) { //left corner connecting vertical and horizontal segments
+						rightBound = m;
+					}
+					else { //right side is empty
+						rightBound = m + __keepoutRadius_lateral;
+						if (rightBound > dim_m - 1)
+							rightBound = dim_m - 1;
+					}
+				}
 			}
-			
-			//check line end left condition
-			if (m-1 >= 0) {
-				tmp = __grid->at(m-1,n,k); //get cell to left
-				tmpStatus = tmp->getStatus();
-				if (tmpStatus == CellFilled || tmpStatus == CellContact) //not line end
-					leftBound = m;
-				else //line end
-					leftBound = m-__keepoutRadius_longitudinal;
-				
-				if (leftBound < 0)
-					leftBound = 0;
+
+			//if not verical then it's horizontal
+			if (!isVertical) {
+				if (m - 1 >= 0) {
+					tmpleft = __grid->at(m - 1, n, k);
+					tmplefts = tmpleft->getStatus();
+					if (tmplefts == CellFilled || tmplefts == CellContact) //not line end
+						leftBound = m;
+					else //line end
+						leftBound = m - __keepoutRadius_longitudinal;
+					if (leftBound < 0)
+						leftBound = 0;
+				}
+
+				if (m + 1 < dim_m) {
+					tmpright = __grid->at(m + 1, n, k);
+					tmprights = tmpright->getStatus();
+					if (tmprights == CellFilled || tmprights == CellContact) //not line end
+						rightBound = m;
+					else //line end
+						rightBound = m + __keepoutRadius_longitudinal;
+					if (rightBound > dim_m - 1)
+						rightBound = dim_m - 1;
+				}
+				topBound = n + __keepoutRadius_lateral;
+				if (topBound > dim_n - 1)
+					topBound = dim_n - 1;
+				bottomBound = n - __keepoutRadius_lateral;
+				if (bottomBound < 0)
+					bottomBound = 0;
 			}
 		}
 	}
