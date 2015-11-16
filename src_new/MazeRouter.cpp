@@ -641,14 +641,14 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
 				else if(__rules->getMetal2Direction() == 'B') { //bidirectional
-					if (m-1 >= 0)
-						neighbors.push_back(__grid->at(m-1,n,k));
-					if (m+1 < dim_m)
-						neighbors.push_back(__grid->at(m+1,n,k));
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
 					if (n+1 < dim_n)
 						neighbors.push_back(__grid->at(m,n+1,k));
+					if (m-1 >= 0)
+						neighbors.push_back(__grid->at(m-1,n,k));
+					if (m+1 < dim_m)
+						neighbors.push_back(__grid->at(m+1,n,k));
 				}
 				neighbors.push_back(__grid->at(m,n,0)); 
 				//neighbors.push_back(__grid->at(m,n,2));

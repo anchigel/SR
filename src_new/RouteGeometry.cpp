@@ -277,7 +277,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 					//std::cout<<"xCenter="<<xCenter<<" yCenter="<<yCenter<<endl; //Weiche
                     
                     bool viaExtensionNeeded = isViaExtNeeded(currCell,grid);
-                    
+                    bool via_is_set = false;
                     oaNet* currNet=NULL;
                      //create net
                     char netNameCharP[25];
@@ -294,7 +294,10 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 						oaRect* via=createVia(currCell, dr,design);
                         if(currNet==NULL)
 							cerr<<"currNet is NULL"<<endl;
-                        else via->addToNet(currNet);
+                        else {
+							via->addToNet(currNet);
+							//via_is_set = true;
+						}
                     }
 					
                     /*If the first cell is a contact, then extend with contact width*/
@@ -338,9 +341,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         int tempX, tempY;
                         currCell->getAbsolutePosition(&tempX,&tempY);
                         
-                        if(currCell->needsVia())
-                        {
-                            
+                        if(currCell->needsVia() && !via_is_set)
+                        {                            
                              oaRect* via=createVia(currCell, dr,design);
                             if(currNet==NULL)
                                 cerr<<"currNet is NULL"<<endl;
