@@ -8,7 +8,7 @@
 Router::Router() {
 }
 
-Router::Router(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, int nLayers) {
+Router::Router(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox,oaUInt4 n_Layers) {
     __netlist = netlist;
     __rules = rules;
     __VDD_y = VDD_y;
@@ -22,7 +22,7 @@ Router::~Router()
 {
 }
 
-void Router::buildGrid(int nLayers) {
+void Router::buildGrid(oaUInt4 n_Layers) {
 }
 
 bool Router::route() {

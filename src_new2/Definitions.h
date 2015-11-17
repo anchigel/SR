@@ -18,7 +18,7 @@ struct METAL_LAYER_INFO
     bool vertical;//if true then vertical , otherwise horizontal
 };
 static METAL_LAYER_INFO METAL_LAYERS_INFO[]={{8,true},{12,false},{18,true}};
-static int VIA_LAYER_NUMBERS[]={11, 15};
+static int VIA_LAYER_NUMBERS[]={11,15};
 #define PURPOSE_NUM 1
 
 #endif	/* DEFINITIONS_H */

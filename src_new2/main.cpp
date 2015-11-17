@@ -90,19 +90,18 @@ int main(int argc, char** argv)
     cout << "Starting the MazeRouter, try #1 with given design rules..." << endl;
     bool routerSuccess = router->route();
     if (routerSuccess)
-		 cout << "Routing try #1 SUCCESS with given design rules using only metal 1 and 2!" << endl;
+		 cout << "Routing try #1 SUCCESS with given design rules!" << endl;
 	 else {
-		cout << "Routing try #1 FAILED with given design rules using only metal 1 and 2!" << endl;
+		 cout << "Routing try #1 FAILED with given design rules!" << endl;
 		 delete router;
-		 cout << "Constructing a MazeRouter..." << endl;
-		 MazeRouter* router = new MazeRouter(&connections, &designRules, vddLowerY, gndUpperY, &bbox, 3);
-		cout << "Starting the MazeRouter, try #1.5 with given design rules... and using metal 1-3" << endl;
-		routerSuccess = router->route();
-		if (routerSuccess)
-			 cout << "Routing try #1.5 SUCCESS with given design rules and using metal 1-3!" << endl;
-		else {
-			 cout << "Routing try #1.5 FAILED with given design rules nd using metal 1-3!" << endl;
-			 delete router;
+		 router = new MazeRouter(&connections, &designRules, vddLowerY, gndUpperY, &bbox, 3);
+		 designRules.print();
+		 cout << "Starting the MazeRouter, try #1.5 with 3 metal layers..." << endl;
+		 routerSuccess = router->route();
+		 if (routerSuccess) {
+			 cout << "Routing try #1.5 SUCCESS with 3 metal layers!" << endl;
+		 }
+		 else {
 			 designRules.setMetalSpaceRule(5); //5nm spacing rule to improve density
 			 designRules.setContactViaExtensionRule(0); //Eliminate extension rule to make things even easier
 			 cout << "Constructing a MazeRouter..." << endl;

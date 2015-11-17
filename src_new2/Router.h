@@ -22,7 +22,7 @@ using namespace std;
 class Router {
 public:
     Router();
-    Router(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, int nLayers);
+    Router(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, oaUInt4 n_Layers);
     ~Router();
     
     virtual bool route();
@@ -37,7 +37,7 @@ protected:
     oaBox* __design_bbox;
 	 bool __foundRoute;
     
-    virtual void buildGrid(int nLayers);
+    virtual void buildGrid(oaUInt4 n_Layers);
 };
 
 #endif	/* ROUTER_H */

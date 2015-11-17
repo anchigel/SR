@@ -16,13 +16,13 @@ class MazeRouter : public Router
 {
 public:
     MazeRouter();
-    MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, int nLayers);
+    MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, oaUInt4 n_Layers);
     ~MazeRouter();
     
     bool route();
 private:
     
-    void buildGrid(int nLayers); //generate grid dimensions, cell sizing, cell0 origin, allocate memory for grid of cells
+    void buildGrid(oaUInt4 n_Layers); //generate grid dimensions, cell sizing, cell0 origin, allocate memory for grid of cells
     oaUInt4 cellDim_coarse(); //compute cell dimensions in DBU assuming coarse grid
     oaUInt4 cellDim_fine(); //compute cell dimensions in DBU assuming fine grid
     void initializeGrid(); //enter contact info, power rails
@@ -41,7 +41,7 @@ private:
     oaUInt4 __keepoutRadius_bbox_m1;
     oaUInt4 __keepoutRadius_bbox_m2_dbu;
     oaUInt4 __keepoutRadius_bbox_m2;
-	int num_of_layers;
+	oaUInt4 num_of_layers;
 };
 
 #endif	/* MAZEROUTER_H */

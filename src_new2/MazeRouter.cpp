@@ -26,9 +26,9 @@ MazeRouter::MazeRouter()
     __keepoutRadius_bbox_m2 = 0;
 }
 
-MazeRouter::MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, int nLayers) : Router(netlist,rules,VDD_y,VSS_y,design_bbox, nLayers) {
+MazeRouter::MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, oaUInt4 n_Layers) : Router(netlist,rules,VDD_y,VSS_y,design_bbox,n_Layers) {
     
-    buildGrid(nLayers);
+    buildGrid(n_Layers);
     
     //Lateral keepout radius (for parallel wire segments on same layer): Min metal width + min metal spacing = metal pitch
     __keepoutRadius_lateral_dbu = __rules->getMetalWidthRule() + __rules->getMetalSpaceRule();
@@ -50,7 +50,7 @@ MazeRouter::MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, o
     __keepoutRadius_bbox_m2_dbu = __rules->getViaDimensionRule() / 2 + __rules->getContactViaExtensionRule();
     __keepoutRadius_bbox_m2 = __keepoutRadius_bbox_m2_dbu / cell_w;
 	
-	num_of_layers = nLayers;
+	num_of_layers = n_Layers;
     
     cout << "Maze routing lateral keepout radius (DBU): " << __keepoutRadius_lateral_dbu << endl;
     cout << "Maze routing lateral keepout radius (cells): " << __keepoutRadius_lateral << endl;
@@ -123,8 +123,8 @@ bool MazeRouter::route() {
                 else   
                    mazeRoute(net, closestPairs[pairIndex].getIndex1(),
                                    closestPairs[pairIndex].getIndex2(), false);
-            }*/
-            
+            }
+            */
         }
     }
     
@@ -162,7 +162,7 @@ bool MazeRouter::route() {
 	 return __foundRoute;
 }
 
-void MazeRouter::buildGrid(int nLayers) {
+void MazeRouter::buildGrid(oaUInt4 n_Layers) {
     cout << "MazeRouter is building the Grid..." << endl;
     
     //First, determine the dimension (width, height) of each cell in DBU. For MazeRouter, width and height should be equal.
@@ -180,7 +180,7 @@ void MazeRouter::buildGrid(int nLayers) {
    
     m = design_width / cell_dim_x;
     n = design_height / cell_dim_y;
-    k = nLayers; //Variable, depending on input in main.cpp
+    k = n_Layers; //Variable, depending on input in main.cpp
     
     //Next, determine the origin (x0,y0) of the bottom-left-most cell on layer 0, relative to origin of design in DBU
     oaInt4 cell0_x = 0;
@@ -295,16 +295,14 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 		if(layer == 1) {
 			contact->setNeedsVia();
 		}
-			
+		
 		//int nCellsInRail=11; //Weiche
 		//int nCellsInRail=0; //Weiche	
 			while (!done) { //Iterate through cells until we hit a rail
             //cout<<"before at m="<<m<<" j="<<j<<" k="<<k<<endl; //Weiche
-							
 			Cell* curr = __grid->at(m,j,layer);
 			Cell* vdd_vss = __grid->at(m,j,k);
             //cout<<"after at m="<<m<<" j="<<j<<" k="<<k; //Weiche
-
 			CellStatus status = curr->getStatus();
 			CellStatus status2 = vdd_vss->getStatus();
             oaUInt4 net_id = curr->getNetID();
@@ -337,6 +335,7 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 					vdd_vss->setBacktrace(curr);
 				}
 			}
+
             switch (status) {
                 case CellVDDRail:
 				//cout<<"  case CellVDDRail"<<endl; //Weiche
@@ -358,7 +357,7 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 							curr->setNeedsVia();
 							done = true;
 						}*/
-                       done = true;
+                        done = true;
 					}
                     else {
                         cout << "Somehow hit the VDD rail while routing VSS!" << endl;
@@ -386,7 +385,7 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
 							curr->setNeedsVia();
 							done = true;
 						}*/
-                      done = true;
+                        done = true;
 					}
                     else {
                         cout << "Somehow hit the VSS rail while routing VDD!" << endl;
@@ -420,7 +419,6 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
                     curr->setStatus(CellFilled);
                     curr->setNetType(contact->getNetType());
                     curr->setNetID(nid);
-					
                     break;
             }
                        
@@ -441,131 +439,7 @@ void MazeRouter::routePowerNet(oaInt4 nid) {
             }
         }       
     }
-} /*
-void MazeRouter::routePowerNet(oaInt4 nid) {
-    //We assume that each contact that needs to connect to VDD can route directly up in Metal1.
-    //We assume that each contact that needs to connect to VSS can route directly down in Metal1.
-    //This appears reasonable with the given test cases, and the knowledge of P/N diffusion regions and normal CMOS logic.
-    oaUInt4 dim_m, dim_n, dim_k = 0;
-    __grid->getDims(&dim_m, &dim_n, &dim_k);
-
-    //cout << "In routePowerNet! dim_m = " << dim_m << " dim_n = " << dim_n << endl; //Weiche
-    //Let's loop through all contacts that are on the net, and generate their routes one-by-one.
-    for (oaInt4 i = 0; i < __contactCells[nid].size(); i++) {
-        Cell* contact = __contactCells[nid][i];
-        oaUInt4 m,n,k = 0;
-        contact->getPosition(&m, &n, &k);
-        oaInt4 j = n;
-        bool done = false;
-		//int nCellsInRail=11; //Weiche
-		//int nCellsInRail=0; //Weiche	
-			while (!done) { //Iterate through cells until we hit a rail
-            //cout<<"before at m="<<m<<" j="<<j<<" k="<<k<<endl; //Weiche
-			Cell* curr = __grid->at(m,j,k);
-            //cout<<"after at m="<<m<<" j="<<j<<" k="<<k; //Weiche
-			CellStatus status = curr->getStatus();
-            oaUInt4 net_id = curr->getNetID();
-
-            switch (status) {
-                case CellVDDRail:
-				//cout<<"  case CellVDDRail"<<endl; //Weiche
-                    if (nid == VDD_NET_ID)
-					{
-						/*if(nCellsInRail>0) //Weiche
-						{
-							curr->setStatus(CellFilled);
-			                curr->setNetType(contact->getNetType());
-				            curr->setNetID(nid);
-							nCellsInRail--;
-							if(nCellsInRail==5)
-								curr->setNeedsVia();
-						}*/
-						/*if(nCellsInRail==0){ //Weiche
-							curr->setStatus(CellFilled);
-			                curr->setNetType(contact->getNetType());
-				            curr->setNetID(nid);
-							curr->setNeedsVia();
-							done = true;
-						}*/
-        /*                done = true;
-					}
-                    else {
-                        cout << "Somehow hit the VDD rail while routing VSS!" << endl;
-						__foundRoute = false;
-                        //__grid->print();
-                        exit(1);
-                    }
-                    break;
-                case CellVSSRail:
-                    //cout<<"  case CellVSSRail"<<endl; //Weiche
-                    if (nid == VSS_NET_ID){
-						/*if(nCellsInRail>0) //Weiche
-						{
-							curr->setStatus(CellFilled);
-			                curr->setNetType(contact->getNetType());
-				            curr->setNetID(nid);
-							nCellsInRail--;
-							if(nCellsInRail==5)
-								curr->setNeedsVia();
-						}*/
-						/* if(nCellsInRail==0){ //Weiche
-							curr->setStatus(CellFilled);
-			                curr->setNetType(contact->getNetType());
-				            curr->setNetID(nid);
-							curr->setNeedsVia();
-							done = true;
-						}*/
-     /*                   done = true;
-					}
-                    else {
-                        cout << "Somehow hit the VSS rail while routing VDD!" << endl;
-						__foundRoute = false;
-                        //__grid->print();
-                        exit(1);
-                    }
-                    break;
-                case CellFilled:
-                    //cout<<"  case CellFilled"<<endl; //Weiche
-                case CellContact:
-				    //cout<<"  case CellContact"<<endl; //Weiche
-                    if (net_id != nid) {
-						//cout << "net_id = " << net_id << " nid = " << nid << endl; //Weiche
-                        cout << "We have a problem routing power net " << contact->getNetType() << "! We hit an occupied cell that wasn't ours. Here's the Grid." << endl;
-						__foundRoute = false;
-                        //cout<<"m: "<<m<<", j: "<<j<<", k: "<<k<<endl; //Weiche
-						//__grid->print();
-                        exit(1);
-                    }
-                    break;
-                case CellKeepout:
-				    //cout<<"  case CellKeepout"<<endl; //Weiche
-                    cout << "We have a problem routing power net " << contact->getNetType() << "! We hit a keepout region. Here's the Grid." << endl;
-                    __foundRoute = false;
-                    __grid->print();
-                    exit(1);
-                    break;
-                case CellFree:
-				    //cout<<"  case CellFree"<<endl; //Weiche
-                    curr->setStatus(CellFilled);
-                    curr->setNetType(contact->getNetType());
-                    curr->setNetID(nid);
-                    break;
-            }
-                       
-            if (nid == VDD_NET_ID) {
-                //create backtrace
-                if (i > 0)
-                    curr->setBacktrace(__grid->at(m,j-1,k));
-                j++;
-            } else {
-                //create backtrace
-                if (i > 0)
-                    curr->setBacktrace(__grid->at(m,j+1,k));
-                j--;
-            }
-        }       
-    }
-}*/
+} 
 
 void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIndex1, bool setPin) { //Lee's algorithm
     //First, choose two endpoints to connect, and set them as source and sink.
@@ -603,7 +477,7 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
             curr->getPosition(&m,&n,&k);
             neighbors.clear();
 
-            if (k == 0) { //bottom layer, M1, route vertically only
+           if (k == 0) { //bottom layer, M1, route vertically only
                 if(__rules->getMetal1Direction() == 'V') { //vertical only
 					if (n-1 >= 0)
 						neighbors.push_back(__grid->at(m,n-1,k));
@@ -682,7 +556,6 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 				 neighbors.push_back(__grid->at(m,n,1)); 
 				 //neighbors.push_back(__grid->at(m,n,0)); 
 			}
-            //neighbors.push_back(__grid->at(m,n,(k+1)%2)); //above or below
     
             Cell* next = NULL;
             CellStatus nextstatus;
@@ -794,23 +667,13 @@ void MazeRouter::doBacktrace(Cell* source, Cell* sink, bool setPin) {
             tmp->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
-	/*	else if (currk == 2 && tmpk == 0) { //change from layer 0 to layer 2
-            //set via on tmp, which is M1.
-            tmp->setNeedsVia();
-            cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
-        }
-		else if (currk == 0 && tmpk == 2) { //change from layer 2 to layer 0
-            //set via on tmp, which is M1.
-            curr->setNeedsVia();
-            cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
-        }*/
 		else if (currk == 1 && tmpk == 2) { //change from layer 2 to layer 1
-            //set via on tmp, which is M1.
+            //set via on curr, which is M2.
             curr->setNeedsVia();
-            cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
+            cout << "Via needed at cell (" << currm << "," << currn << "," << currk << ") ---> (" << currm_dbu << "," << currn_dbu << ")" << endl;
         }
 		else if (currk == 2 && tmpk == 1) { //change from layer 1 to layer 2
-            //set via on tmp, which is M1.
+            //set via on tmp, which is M2.
             tmp->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
         }
@@ -878,7 +741,7 @@ void MazeRouter::generateKeepout(Cell* c) {
     CellStatus cStatus = c->getStatus();
     
     
-     //SET LATERAL AND LONGITUDINAL BOUNDS DEPENDING ON LAYER AND LINE END STATUS
+       //SET LATERAL AND LONGITUDINAL BOUNDS DEPENDING ON LAYER AND LINE END STATUS
     if (k == 0) { //metal1
 		if(__rules->getMetal1Direction() == 'V') { //vertical only
 			

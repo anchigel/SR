@@ -129,9 +129,10 @@ oaDesign* InputOutputManipulator::ReadOADesign(DesignInfo designInfo)
     if (layer==NULL) 
     {
       cout << "Creating via1 layer\n";
-      oaPhysicalLayer::create(tech, "via1", VIA_LAYER_NUMBERS[0], oacMetalMaterial, VIA_LAYER_NUMBERS[0]);
+      oaPhysicalLayer::create(tech, "via1", VIA_LAYER_NUMBERS[0], oacMetalMaterial, 11);
     }
 	
+	// check if via2 layer is in the database
 	layer =  oaLayer::find(tech, "via2");
     if (layer==NULL) 
     {

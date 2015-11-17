@@ -228,9 +228,13 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 
                 //1-Skip non-occupied cells till we get to first filled cell
                 Cell* currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
-                while (!(currCell->getStatus() == CellFilled || currCell->getStatus() == CellContact)
-                       && secDim < nTilesSecondDim)                      
-				{
+                while (!(currCell->getStatus() == CellFilled
+
+                       || currCell->getStatus() == CellContact
+                       )
+                       && secDim < nTilesSecondDim)
+		                      
+{
                     currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
                     secDim++;
                   	if(currCell->getStatus() == CellVDDRail || currCell->getStatus() == CellVSSRail) {
@@ -251,7 +255,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                                 cerr<<"currNet is NULL"<<endl;
                             else via->addToNet(currNet);
                         }
-					}
+					}	
+
                 }
                 if (secDim < nTilesSecondDim)//check that we found filled cell
                     //and not that we went out of bounds
@@ -275,6 +280,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     currNet=oaNet::find(topBlock, netName);
                     if(!currNet)//if not already created
                          currNet=oaNet::create(topBlock, netName);
+						 
 					bool via_is_set = false;
 					if(currCell->needsVia())
                     {  
@@ -286,7 +292,6 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 							//via_is_set = true;
 						}
                     }
-					
                     /*If the first cell is a contact, then extend with contact width*/
                     /* also handle via extension*/
                     if (currCell->getStatus() == CellContact
@@ -298,7 +303,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         
                        
                     
-                        if (layerInfo.vertical)
+                        if (METAL_LAYERS_INFO[layer].vertical)
                         {
                             bottom = yCenter - dr.getViaDimensionRule() / 2
                                     - dr.getContactViaExtensionRule();
@@ -316,7 +321,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         bottom = yCenter - extFromCenterY;
                     }
                     bool foundDiffNet=false;
-                    //Now go till the last filled cell                
+                    //Now go till the last filled cell  
+					int first_loop = 0;
                     while ((currCell->getStatus() == CellFilled
                            || currCell->getStatus() == CellContact
                         )
@@ -327,15 +333,16 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         currNetID=currCell->getNetID();
                         int tempX, tempY;
                         currCell->getAbsolutePosition(&tempX,&tempY);
-                        
-                        if(currCell->needsVia() && !via_is_set)
-                        {                            
-                             oaRect* via=createVia(currCell, dr,design);
-                            if(currNet==NULL)
-                                cerr<<"currNet is NULL"<<endl;
-                            else via->addToNet(currNet);
+                        if(first_loop != 0) {
+							if(currCell->needsVia())
+							{
+								
+								 oaRect* via=createVia(currCell, dr,design);
+								if(currNet==NULL)
+									cerr<<"currNet is NULL"<<endl;
+								else via->addToNet(currNet);
+							}
                         }
-                       
                         //if pin, create label
                         if (currCell->isPin())
                         {                         
@@ -344,7 +351,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         }
                         currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
                         secDim++;
-                        
+                        first_loop++;
                     }
                     //Now we have found the first empty cell after this segment
                     //endpoint should be the last cell
@@ -372,7 +379,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         //   || isBackTraceOfCellAdjLayer(currCell, grid,2,cellAdjLayer)//has via below/above it
                         )
                     {
-                        if (layerInfo.vertical)
+                        if (METAL_LAYERS_INFO[layer].vertical)
                         {
                             //extend by half via and extension
                             top = yCenter + dr.getViaDimensionRule() / 2
@@ -715,7 +722,8 @@ oaRect* RouteGeometry::createVia(Cell* currCell, ProjectDesignRules dr,
         //if more via layers, this will need to be changed
          unsigned int h, v, layer;
         currCell->getPosition(&h, &v, &layer);
-        int viaLayerIndex = layer / 2; //layers 0 and 1 map to 0th via layer, then 1..
+        //int viaLayerIndex = layer / 2; //layers 0 and 1 map to 0th via layer, then 1..
+        int viaLayerIndex;
 		if(layer == 0)
 			viaLayerIndex = 0;
 		else
