@@ -300,10 +300,21 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         //|| isBackTraceOfCellAdjLayer(currCell, grid,2,
                         //                                cellAdjLayer))//has via below/above it)
                     {
-                        
-                       
+                          //Check if contact is part of vertical segment
+						Cell* tmp;
+						bool vertical;
+						if(secDim - 1 > 0) {
+							tmp = GetCell(grid, layerInfo, firstDim, secDim - 1, layer);
+							if(tmp->getStatus() == CellFilled)
+								vertical = true;
+						}
+						if(secDim + 1 < nTilesSecondDim) {
+							tmp = GetCell(grid, layerInfo, firstDim, secDim + 1, layer);
+							if(tmp->getStatus() == CellFilled)
+								vertical = true;
+						}
                     
-                        if (METAL_LAYERS_INFO[layer].vertical)
+                        if (vertical || METAL_LAYERS_INFO[layer].vertical)
                         {
                             bottom = yCenter - dr.getViaDimensionRule() / 2
                                     - dr.getContactViaExtensionRule();
@@ -379,7 +390,19 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         //   || isBackTraceOfCellAdjLayer(currCell, grid,2,cellAdjLayer)//has via below/above it
                         )
                     {
-                        if (METAL_LAYERS_INFO[layer].vertical)
+                        Cell* tmp;
+						bool vertical;
+						if(secDim - 1 > 0) {
+							tmp = GetCell(grid, layerInfo, firstDim, secDim - 1, layer);
+							if(tmp->getStatus() == CellFilled)
+								vertical = true;
+						}
+						if(secDim + 1 < nTilesSecondDim) {
+							tmp = GetCell(grid, layerInfo, firstDim, secDim + 1, layer);
+							if(tmp->getStatus() == CellFilled)
+								vertical = true;
+						}
+						if (vertical || METAL_LAYERS_INFO[layer].vertical)
                         {
                             //extend by half via and extension
                             top = yCenter + dr.getViaDimensionRule() / 2

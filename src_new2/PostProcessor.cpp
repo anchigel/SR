@@ -300,9 +300,23 @@ void PostProcessor::removeUnnecessarySegments(oaDesign* design,
         ProjectDesignRules dr)
 {
     //if it is metal 1, then look for shapes on metal2 and vice versa
-    int layerIndex = !mergedPolygonsLayerIndex;
+    //int layerIndex = !mergedPolygonsLayerIndex;
+    int layerIndex;
+	if(mergedPolygonsLayerIndex == 0)
+		layerIndex = 1;
+	else if(mergedPolygonsLayerIndex == 1)
+		layerIndex = 0;
+	else if(mergedPolygonsLayerIndex == 2)
+		layerIndex = 1;
+	int via_num;
+	if(mergedPolygonsLayerIndex == 0)
+		via_num = 0;
+	else if(mergedPolygonsLayerIndex == 1)
+		via_num = 0;
+	else if(mergedPolygonsLayerIndex == 2)
+		via_num = 1;
     oaLayerNum layNum = METAL_LAYERS_INFO[layerIndex].layerNum;
-    oaLayerNum viaLayNum = VIA_LAYER_NUMBERS[0];
+    oaLayerNum viaLayNum = VIA_LAYER_NUMBERS[via_num];
     oaPurposeNum purpNum = PURPOSE_NUM; //assuming one purpose number among layouts
 
     if(mergedPolygonsLayerIndex==1)//if M2
