@@ -223,11 +223,13 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
             oaInt4 currNetID=-1;
             while (secDim < nTilesSecondDim)
             {
+				
                 //create a path segment representing every few successive
                 //tiles along the routing layer direction
 
                 //1-Skip non-occupied cells till we get to first filled cell
                 Cell* currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
+				
                 while (!(currCell->getStatus() == CellFilled
 
                        || currCell->getStatus() == CellContact
@@ -281,7 +283,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     if(!currNet)//if not already created
                          currNet=oaNet::create(topBlock, netName);
 						 
-					bool via_is_set = false;
+					//bool via_is_set = false;
 					if(currCell->needsVia())
                     {  
 						oaRect* via=createVia(currCell, dr,design);

@@ -501,7 +501,8 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 						neighbors.push_back(__grid->at(m,n+1,k));
 				}
 				neighbors.push_back(__grid->at(m,n,1));
-				//neighbors.push_back(__grid->at(m,n,2));
+				if(num_of_layers == 3)
+					neighbors.push_back(__grid->at(m,n,2));
             }
             else if(k == 1){ //M2
 				if(__rules->getMetal2Direction() == 'V') { //vertial only
@@ -554,7 +555,7 @@ void MazeRouter::mazeRoute(oaUInt4 netID, oaInt4 contactIndex0, oaInt4 contactIn
 						neighbors.push_back(__grid->at(m+1,n,k));
 				}
 				 neighbors.push_back(__grid->at(m,n,1)); 
-				 //neighbors.push_back(__grid->at(m,n,0)); 
+				 neighbors.push_back(__grid->at(m,n,0)); 
 			}
     
             Cell* next = NULL;
@@ -676,6 +677,30 @@ void MazeRouter::doBacktrace(Cell* source, Cell* sink, bool setPin) {
             //set via on tmp, which is M2.
             tmp->setNeedsVia();
             cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
+        }
+		else if (currk == 0 && tmpk == 2) { //change from layer 2 to layer 0
+            //set via on curr, which is M1.
+            curr->setNeedsVia();
+			Cell * temp = __grid->at(currm, currn, (currk+1));
+			CellStatus tempStatus = temp->getStatus();
+			//if(tempStatus == CellFree)
+				temp->setStatus(CellFilled);
+			temp->setNeedsVia();
+            cout << "Via needed at cell (" << currm << "," << currn << "," << currk << ") ---> (" << currm_dbu << "," << currn_dbu << ")" << endl;
+            cout << "Via needed at cell (" << currm << "," << currn << "," << currk+1 << ") ---> (" << currm_dbu << "," << currn_dbu << ")" << endl;
+			cout << "temp->needsVia(): " << temp->needsVia() << endl;
+        }
+		else if (currk == 2 && tmpk == 0) { //change from layer 0 to layer 2
+            //set via on tmp, which is M1.
+            tmp->setNeedsVia();
+			Cell * temp = __grid->at(currm, currn, (currk-1));
+			CellStatus tempStatus = temp->getStatus();
+			//if(tempStatus == CellFree)
+				temp->setStatus(CellFilled);
+			temp->setNeedsVia();
+            cout << "Via needed at cell (" << tmpm << "," << tmpn << "," << tmpk << ") ---> (" << tmpm_dbu << "," << tmpn_dbu << ")" << endl;
+			cout << "Via needed at cell (" << currm << "," << currn << "," << currk-1 << ") ---> (" << currm_dbu << "," << currn_dbu << ")" << endl;
+			cout << "temp->needsVia(): " << temp->needsVia() << endl;
         }
         
         tmp = curr;
@@ -1271,9 +1296,50 @@ void MazeRouter::generateKeepout(Cell* c) {
 		}
 	}
     
+	oaInt4 newBottom = bottomBound;
+	oaInt4 newRight = rightBound;
+	oaInt4 newLeft = leftBound;
+	oaInt4 newTop = topBound;
+	double increase = 1;
+	double decrease = 1;
+	if(k == 0 && __rules->getMetal1Direction() == 'B') {
+		newBottom *= decrease;
+		newRight *= increase;
+		newLeft *= decrease;
+		newTop *= increase;
+	}
+	else if(k == 1 && __rules->getMetal2Direction() == 'B') {
+		newBottom *= decrease;
+		newRight *= increase;
+		newLeft *= decrease;
+		newTop *= increase;
+	}
+	else if(k == 2 && __rules->getMetal3Direction() == 'B') {
+		newBottom *= decrease;
+		newRight *= increase;
+		newLeft *= decrease;
+		newTop *= increase;
+	}
+	
+	if (newTop > dim_n-1)
+		newTop = dim_n-1;
+	if (newRight > dim_m-1)
+		newRight = dim_m-1;
+	if (newBottom < 0)
+		newBottom = 0;
+	if (newLeft < 0)
+		newLeft = 0;
 
-    for (oaInt4 j = topBound; j >= bottomBound; j--) {
+    /*for (oaInt4 j = topBound; j >= bottomBound; j--) {
         for (oaInt4 i = leftBound; i <= rightBound; i++) {
+            tmp = __grid->at(i,j,k);
+            if (tmp->getStatus() == CellFree) {      
+                tmp->setStatus(CellKeepout);
+            }
+        }
+    }*/
+	 for (oaInt4 j = newTop; j >= newBottom; j--) {
+        for (oaInt4 i = newLeft; i <= newRight; i++) {
             tmp = __grid->at(i,j,k);
             if (tmp->getStatus() == CellFree) {      
                 tmp->setStatus(CellKeepout);

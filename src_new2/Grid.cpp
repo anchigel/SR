@@ -122,6 +122,8 @@ void Grid::print() {
     __numVias = 0;
     printLayer(0);
     printLayer(1);
+	if(__dim_k == 3)
+		printLayer(2);
     cout << "Total # vias: " << __numVias << endl; 
 }
 
