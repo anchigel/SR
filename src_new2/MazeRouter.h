@@ -41,6 +41,8 @@ private:
     oaUInt4 __keepoutRadius_bbox_m1;
     oaUInt4 __keepoutRadius_bbox_m2_dbu;
     oaUInt4 __keepoutRadius_bbox_m2;
+	oaUInt4 __keepoutRadius_bbox_m3_dbu;
+    oaUInt4 __keepoutRadius_bbox_m3;
 	oaUInt4 num_of_layers;
 };
 

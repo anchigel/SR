@@ -24,6 +24,8 @@ MazeRouter::MazeRouter()
     __keepoutRadius_bbox_m1 = 0;
     __keepoutRadius_bbox_m2_dbu = 0;
     __keepoutRadius_bbox_m2 = 0;
+	__keepoutRadius_bbox_m3_dbu = 0;
+    __keepoutRadius_bbox_m3 = 0;
 }
 
 MazeRouter::MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, oaInt4 VDD_y, oaInt4 VSS_y, oaBox* design_bbox, oaUInt4 n_Layers) : Router(netlist,rules,VDD_y,VSS_y,design_bbox,n_Layers) {
@@ -49,6 +51,8 @@ MazeRouter::MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, o
     __keepoutRadius_bbox_m1 = __keepoutRadius_bbox_m1_dbu / cell_w;
     __keepoutRadius_bbox_m2_dbu = __rules->getViaDimensionRule() / 2 + __rules->getContactViaExtensionRule();
     __keepoutRadius_bbox_m2 = __keepoutRadius_bbox_m2_dbu / cell_w;
+	__keepoutRadius_bbox_m3_dbu = __rules->getViaDimensionRule() / 2 + __rules->getContactViaExtensionRule();
+    __keepoutRadius_bbox_m3 = __keepoutRadius_bbox_m2_dbu / cell_w;
 	
 	num_of_layers = n_Layers;
     
@@ -62,6 +66,8 @@ MazeRouter::MazeRouter(vector<Connection>* netlist, ProjectDesignRules* rules, o
     cout << "Maze routing bounding box keepout radius for Metal1: " << __keepoutRadius_bbox_m1 << endl;
     cout << "Maze routing bounding box keepout radius for Metal2 (DBU): " << __keepoutRadius_bbox_m2_dbu << endl;
     cout << "Maze routing bounding box keepout radius for Metal2: " << __keepoutRadius_bbox_m2 << endl;
+	    cout << "Maze routing bounding box keepout radius for Metal3 (DBU): " << __keepoutRadius_bbox_m3_dbu << endl;
+    cout << "Maze routing bounding box keepout radius for Metal3: " << __keepoutRadius_bbox_m3 << endl;
 }
 
 MazeRouter::~MazeRouter()
@@ -157,7 +163,7 @@ bool MazeRouter::route() {
     }
    
     __grid->reset();
-    //__grid->print();
+    __grid->print();
 	
 	 return __foundRoute;
 }
@@ -732,7 +738,8 @@ void MazeRouter::generateKeepouts(oaUInt4 netID) {
                         //Special keepouts for side of bounding box. Radius depends on which layer.
                         if (
                             (k == 0 && (m <= __keepoutRadius_bbox_m1 || m >= dim_m-__keepoutRadius_bbox_m1)) ||
-                            (k == 1 && (m <= __keepoutRadius_bbox_m2 || m >= dim_m-__keepoutRadius_bbox_m2))
+                            (k == 1 && (m <= __keepoutRadius_bbox_m2 || m >= dim_m-__keepoutRadius_bbox_m2)) ||
+							(k == 2 && (m <= __keepoutRadius_bbox_m3 || m >= dim_m-__keepoutRadius_bbox_m3)) 
                            ) {
                          //   cout << "Keeping out n: " << n << " k: " << k << endl;
                                 curr->setStatus(CellKeepout);
@@ -1300,8 +1307,8 @@ void MazeRouter::generateKeepout(Cell* c) {
 	oaInt4 newRight = rightBound;
 	oaInt4 newLeft = leftBound;
 	oaInt4 newTop = topBound;
-	double increase = 1;
-	double decrease = 1;
+	double increase = 1.05;
+	double decrease = 0.95;
 	if(k == 0 && __rules->getMetal1Direction() == 'B') {
 		newBottom *= decrease;
 		newRight *= increase;
