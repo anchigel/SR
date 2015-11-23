@@ -18,6 +18,338 @@ RouteGeometry::~RouteGeometry()
 {
 }
 
+void RouteGeometry::mazeToGeometry_bidirectional(Grid* grid, oaDesign* design,
+        ProjectDesignRules dr, int layer)
+{
+	    oaNativeNS	ns;
+		//Now, each continuous horizontal route will be created as a continuous path
+		//segment
+		//a jump from m1 to m2 should create a via
+
+		oaBlock* topBlock = design->getTopBlock();
+		//get dimensions of grid
+		unsigned int nLayers, nHorizTiles, nVerticTiles;
+		grid->getDims(&nHorizTiles, &nVerticTiles, &nLayers);
+		oaLayerNum layNum = METAL_LAYERS_INFO[layer].layerNum; //LPPHeader->getLayerNum();
+        oaPurposeNum purpNum = 1; //LPPHeader->getPurposeNum();
+
+		for(int i = 0; i < 2; i++) {
+        //first dimension is the dimension perpendicular to routing layer direction
+        //and second dimension is the dimension along routing layer direction
+        int nTilesFirstDim, nTilesSecondDim;
+
+        //METAL_LAYER_INFO layerInfo = METAL_LAYERS_INFO[layer];
+		int extFromCenterX, extFromCenterY;
+        int wireWidth = dr.getMetalWidthRule();
+        unsigned int w, h;
+        grid->getCellDims(&w, &h);
+        if (i == 0)
+        {
+            nTilesFirstDim = nHorizTiles;
+            nTilesSecondDim = nVerticTiles;
+           
+        } else
+        {
+            nTilesFirstDim = nVerticTiles;
+            nTilesSecondDim = nHorizTiles;
+        }
+        extFromCenterX = static_cast<int>(ceil(wireWidth / 2));
+        extFromCenterY = static_cast<int>(ceil(wireWidth / 2));
+        for (int firstDim = 0; firstDim < nTilesFirstDim; firstDim++)
+        {
+            //Now I want to get the longest possible segments from the 
+            //second dimension
+            int secDim = 0;
+            oaInt4 currNetID=-1;
+			bool vertical = false;
+			bool cornerContact = false;
+            while (secDim < nTilesSecondDim)
+            {
+                //create a path segment representing every few successive
+                //tiles along the routing layer direction
+
+                //1-Skip non-occupied cells till we get to first filled cell
+                Cell* currCell;
+                do{
+                    //currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
+					if(i == 0)
+						currCell = grid->at(firstDim, secDim, layer);
+					else
+						currCell = grid->at(secDim, firstDim, layer);
+                    secDim++;
+                }
+                while (!(currCell->getStatus() == CellFilled|| currCell->getStatus() == CellContact)
+                      && secDim < nTilesSecondDim); //Found filled cell
+				
+				Cell* temp;
+				Cell* temp2;
+				bool filledNext = false;
+				bool singlecell = false;
+				if(secDim < nTilesSecondDim) { //Check if next cell in secDim is filled
+					//temp = GetCell(grid, layerInfo, firstDim, secDim, layer);
+					if(i == 0)
+						temp = grid->at(firstDim, secDim, layer);
+					else
+						temp = grid->at(secDim, firstDim, layer);
+					if((temp->getStatus() == CellFilled || temp->getStatus() == CellContact))
+						filledNext = true;
+				}
+				
+				if(i == 1) {//When horizontal, check for single filled cell, without filled neighbors
+					if(secDim < nTilesSecondDim) {//First check above 
+						//temp2 = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
+						if(i == 0)
+							temp2 = grid->at(firstDim, secDim, layer);
+						else
+							temp2 = grid->at(secDim, firstDim, layer);
+						if(!(temp2->getStatus() == CellFilled || temp2->getStatus() == CellContact))
+							singlecell = true;
+					}
+					if(secDim-2 > 0) { //Now check below
+						//temp2 = GetCell(grid, layerInfo, firstDim-1, secDim, layer);
+						if(i==0)
+							temp2 = grid->at(firstDim, secDim-2, layer);
+						else
+							temp2 = grid->at(secDim-2, firstDim, layer);
+						if((temp2->getStatus() == CellFilled || temp2->getStatus() == CellContact))
+							singlecell = false;
+					}
+					if(firstDim-1 > 0) {//First check above 
+						//temp2 = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
+						if(i==0)
+							temp2 = grid->at(firstDim-1, secDim-1, layer);
+						else
+							temp2 = grid->at(secDim-1, firstDim-1, layer);
+						if((temp2->getStatus() == CellFilled || temp2->getStatus() == CellContact))
+							singlecell = false;
+					} 
+					
+					if(firstDim+1 < nTilesFirstDim) {//First check above 
+						//temp2 = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
+						if(i==0)
+							temp2 = grid->at(firstDim+1, secDim-1, layer);
+						else
+							temp2 = grid->at(secDim-1, firstDim+1, layer);
+						if((temp2->getStatus() == CellFilled || temp2->getStatus() == CellContact))
+							singlecell = false;
+					}
+					
+				}
+				/* if (currCell->isPin())
+                 { 
+					singlecell = true;
+				 }*/
+                if ((currCell->getStatus() == CellFilled || currCell->getStatus() == CellContact)
+					&& (filledNext || singlecell))//check that we found filled cell
+                    //and not that we went out of bounds
+                {
+                    int left, bottom, right, top;
+                    //Now we have found the first filled cell==>Get its center             
+                    //Found start point: get left and bottom of rectangle starting point
+                    int xCenter, yCenter;
+                    currCell->getAbsolutePosition(&xCenter, &yCenter);
+                                     
+                    oaNet* currNet=NULL;
+                     //create net
+                    char netNameCharP[25];
+                    snprintf(netNameCharP, sizeof (currCell->getNetID()), "%d", 
+                             currCell->getNetID());
+
+                    oaName netName(ns,netNameCharP);
+                    currNet=oaNet::find(topBlock, netName);
+                    if(!currNet)//if not already created
+                         currNet=oaNet::create(topBlock, netName);
+					
+					//Check if contact is part of vertical segment
+					Cell* tmp;
+					
+				/*	if(secDim - 1 > 0) {
+						//tmp = GetCell(grid, layerInfo, firstDim, secDim - 1, layer);
+						if(i == 0)
+							tmp = grid->at(firstDim, secDim-1, layer);
+						else
+							tmp = grid->at(secDim-1, firstDim, layer);
+						if(tmp->getStatus() == CellFilled)
+							vertical = true;
+					}
+					if(secDim + 1 < nTilesSecondDim) {
+						if(i == 0)
+							tmp = grid->at(firstDim, secDim+1, layer);
+						else
+							tmp = grid->at(secDim+1, firstDim, layer);
+						if(tmp->getStatus() == CellFilled)
+							vertical = true;
+					}
+					if(firstDim - 1 > 0) {
+						tmp = GetCell(grid, layerInfo, firstDim-1, secDim, layer);
+						if(tmp->getStatus() == CellFilled && vertical)
+							cornerContact = true;
+					}
+					if(firstDim + 1 < nTilesFirstDim) {
+						tmp = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
+						if(tmp->getStatus() == CellFilled && vertical)
+							cornerContact = true;
+					}*/
+
+                    
+					//if ((vertical || layerInfo.vertical) && !cornerContact)
+					if (i == 0)
+                    {
+                        bottom = yCenter - dr.getViaDimensionRule() / 2
+                                - dr.getContactViaExtensionRule();
+                        left = xCenter - extFromCenterX;
+                        //left = xCenter - extFromCenterX - dr.getContactViaExtensionRule();
+                    } else
+                    {
+                        //if (layerInfo.horizontal && !cornerContact)
+                        if (i == 1)
+                        {
+							left = xCenter - dr.getViaDimensionRule() / 2
+									- dr.getContactViaExtensionRule();
+							bottom = yCenter - extFromCenterY;
+							//bottom = yCenter - extFromCenterY - dr.getContactViaExtensionRule();
+                        }
+                        else //corner case, need to do via extension in both directions
+                        {
+                            left = xCenter - dr.getViaDimensionRule() / 2
+									- dr.getContactViaExtensionRule();
+							//bottom = yCenter - extFromCenterY;
+							bottom = yCenter - extFromCenterY - dr.getContactViaExtensionRule();
+                        }
+                    }
+                    
+                    Cell* firstCell=currCell;
+                    //Now go till the last filled cell
+                    do
+                    {
+                        currNetID=currCell->getNetID();//currCell starts at the first cell
+                        int tempX, tempY;
+                        currCell->getAbsolutePosition(&tempX,&tempY);
+                        if(currCell->needsVia())
+                        {
+                            oaRect* via=createVia(currCell, dr,design);
+                            if(currNet==NULL)
+                                cerr<<"currNet is NULL"<<endl;
+                            else via->addToNet(currNet);
+                        }
+                       
+                        //if pin, create label
+                        if (currCell->isPin())
+                        {                         
+                            //Create pin label
+							cout << "Create pin!" << endl;
+                            CreatePinTextLabel(currCell, design,dr);
+                        }
+                        if(secDim==nTilesSecondDim) break;
+                        //currCell = GetCell(grid, layerInfo, firstDim, secDim, layer);
+						if(i == 0)
+							currCell = grid->at(firstDim, secDim, layer);
+						else
+							currCell = grid->at(secDim, firstDim, layer);
+                        secDim++;
+                    }
+                    while ((currCell->getStatus() == CellFilled
+                           || currCell->getStatus() == CellContact)
+                           && currCell->getNetID()==firstCell->getNetID());//same net)
+               
+                    //Now we have found the first empty cell after this segment
+                    //endpoint should be the last cell
+                    if(secDim==nTilesSecondDim)
+                    {     
+                        //currCell = GetCell(grid, layerInfo, firstDim, secDim-1, layer);
+						if(i == 0)
+							currCell = grid->at(firstDim, secDim-1, layer);
+						else
+							currCell = grid->at(secDim-1, firstDim, layer);
+                    }
+                    else //if we stopped because we found different net or because found an empty cell,
+                        //then backup to the last cell
+                    {
+                        //currCell = GetCell(grid, layerInfo, firstDim, secDim - 2, layer);
+						if(i == 0)
+							currCell = grid->at(firstDim, secDim-2, layer);
+						else
+							currCell = grid->at(secDim-2, firstDim, layer);
+                        secDim--;
+                    }
+
+                    currCell->getAbsolutePosition(&xCenter, &yCenter);
+                    /*
+					if(secDim - 1 > 0) {
+						tmp = GetCell(grid, layerInfo, firstDim, secDim - 1, layer);
+						if(tmp->getStatus() == CellFilled)
+							vertical = true;
+					}
+					if(secDim + 1 < nTilesSecondDim) {
+						tmp = GetCell(grid, layerInfo, firstDim, secDim + 1, layer);
+						if(tmp->getStatus() == CellFilled)
+							vertical = true;
+					}
+					if(firstDim - 1 > 0) {
+						tmp = GetCell(grid, layerInfo, firstDim-1, secDim, layer);
+						if(tmp->getStatus() == CellFilled && vertical)
+							cornerContact = true;
+					}
+					if(firstDim + 1 < nTilesFirstDim) {
+						tmp = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
+						if(tmp->getStatus() == CellFilled && vertical)
+							cornerContact = true;
+					}*/
+					
+					//if ((vertical || layerInfo.vertical) && !cornerContact)
+					if (i == 0)
+                    {
+                        //extend by half via and extension
+                        top = yCenter + dr.getViaDimensionRule() / 2
+                                + dr.getContactViaExtensionRule();
+                        right = xCenter + extFromCenterX;
+                        //right = xCenter + extFromCenterX + dr.getContactViaExtensionRule();
+                    } else
+                    {
+                        //if (layerInfo.horizontal && !cornerContact) {
+                        if (i == 1) {
+                            right = xCenter + dr.getViaDimensionRule() / 2
+                                + dr.getContactViaExtensionRule();
+							top = yCenter + extFromCenterY;
+							//top = yCenter + extFromCenterY + dr.getContactViaExtensionRule();
+                        }
+                        else //corner case, need to do via extension in both directions
+                        {
+                            right = xCenter + dr.getViaDimensionRule() / 2
+                                + dr.getContactViaExtensionRule();
+							//top = yCenter + extFromCenterY;
+							top = yCenter + extFromCenterY + dr.getContactViaExtensionRule();
+                        }
+                    }
+					
+                    //Create the wiring segment
+                    //cout << "coords: " << left << " " << bottom << " " << right << " " << top << endl;
+					oaUInt4 minArea = dr.getMinMetalAreaRule();
+					cout << "Min Area: " << minArea << endl;
+					int width = right - left;
+					int height = top - bottom;
+					//10DBU = 1nm
+					width = width;
+					height = height;
+					int area = width*height/10;
+					cout << "Current width: " << width << " Current height: " << height << " Current area: " << area << endl;
+					//oaBox box1 = oaBox(left, bottom, right, top);
+					//cout << "Box width: " << box1.getWidth()/10 << "Box height: " << box1.getHeight()/10 << endl;
+					
+                    oaRect* newSeg = oaRect::create(topBlock, layNum, purpNum,
+                            oaBox(left, bottom, right, top));
+                    if (newSeg == NULL) 
+                        cerr << "newSeg is NULL!" << endl;
+                    else {
+                        if (currNet == NULL)
+                            cerr << "currNet is NULL after creation of newSeg" << endl;
+                        else newSeg->addToNet(currNet);
+                    }
+                }
+            }
+        }
+	}
+}
 
 //Weiche
 void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
@@ -34,8 +366,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
     grid->getDims(&nHorizTiles, &nVerticTiles, &nLayers);
    
     for (int layer = 0; layer < nLayers; layer++)
-    {
-        
+    {		
         oaLayerNum layNum = METAL_LAYERS_INFO[layer].layerNum; //LPPHeader->getLayerNum();
         oaPurposeNum purpNum = 1; //LPPHeader->getPurposeNum();
 
@@ -44,6 +375,17 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
         int nTilesFirstDim, nTilesSecondDim;
 
         METAL_LAYER_INFO layerInfo = METAL_LAYERS_INFO[layer];
+		bool bidirectional = false;
+		if((layer == 0 && dr.getMetal1Direction() == 'B') || 
+			(layer == 1 && dr.getMetal2Direction() == 'B') || (layer == 2 && dr.getMetal3Direction() == 'B'))
+			bidirectional = true;
+
+		if (true)
+		{
+			mazeToGeometry_bidirectional(grid, design, dr, layer);
+			continue;
+		}
+		
         int extFromCenterX, extFromCenterY;
         int wireWidth = dr.getMetalWidthRule();
         unsigned int w, h;
@@ -66,6 +408,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
             //second dimension
             int secDim = 0;
             oaInt4 currNetID=-1;
+			bool vertical = false;
+			bool cornerContact = false;
             while (secDim < nTilesSecondDim)
             {
                 //create a path segment representing every few successive
@@ -101,8 +445,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 					
 					//Check if contact is part of vertical segment
 					Cell* tmp;
-					bool vertical = false;
-					bool cornerContact = false;
+					
 					if(secDim - 1 > 0) {
 						tmp = GetCell(grid, layerInfo, firstDim, secDim - 1, layer);
 						if(tmp->getStatus() == CellFilled)
@@ -113,7 +456,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 						if(tmp->getStatus() == CellFilled)
 							vertical = true;
 					}
-					if(firstDim - 1 > 0) {
+				/*	if(firstDim - 1 > 0) {
 						tmp = GetCell(grid, layerInfo, firstDim-1, secDim, layer);
 						if(tmp->getStatus() == CellFilled && vertical)
 							cornerContact = true;
@@ -122,10 +465,11 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 						tmp = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
 						if(tmp->getStatus() == CellFilled && vertical)
 							cornerContact = true;
-					}
+					}*/
 
                     
-					if ((vertical || layerInfo.vertical) && !cornerContact)
+					//if ((vertical || layerInfo.vertical) && !cornerContact)
+					if ((vertical || layerInfo.vertical))
                     {
                         bottom = yCenter - dr.getViaDimensionRule() / 2
                                 - dr.getContactViaExtensionRule();
@@ -133,7 +477,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         //left = xCenter - extFromCenterX - dr.getContactViaExtensionRule();
                     } else
                     {
-                        if (layerInfo.horizontal && !cornerContact)
+                        //if (layerInfo.horizontal && !cornerContact)
+                        if (layerInfo.horizontal)
                         {
 							left = xCenter - dr.getViaDimensionRule() / 2
 									- dr.getContactViaExtensionRule();
@@ -192,7 +537,7 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     }
 
                     currCell->getAbsolutePosition(&xCenter, &yCenter);
-                    
+                    /*
 					if(secDim - 1 > 0) {
 						tmp = GetCell(grid, layerInfo, firstDim, secDim - 1, layer);
 						if(tmp->getStatus() == CellFilled)
@@ -212,9 +557,10 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
 						tmp = GetCell(grid, layerInfo, firstDim+1, secDim, layer);
 						if(tmp->getStatus() == CellFilled && vertical)
 							cornerContact = true;
-					}
+					}*/
 					
-					if ((vertical || layerInfo.vertical) && !cornerContact)
+					//if ((vertical || layerInfo.vertical) && !cornerContact)
+					if ((vertical || layerInfo.vertical))
                     {
                         //extend by half via and extension
                         top = yCenter + dr.getViaDimensionRule() / 2
@@ -223,7 +569,8 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                         //right = xCenter + extFromCenterX + dr.getContactViaExtensionRule();
                     } else
                     {
-                        if (layerInfo.horizontal && !cornerContact) {
+                        //if (layerInfo.horizontal && !cornerContact) {
+                        if (layerInfo.horizontal) {
                             right = xCenter + dr.getViaDimensionRule() / 2
                                 + dr.getContactViaExtensionRule();
 							top = yCenter + extFromCenterY;
@@ -252,10 +599,9 @@ void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
                     }
                 }
             }
-        }
+        } 
     }
 }
-
 /* Yasmine
 void RouteGeometry::mazeToGeometry(Grid* grid, oaDesign* design,
         ProjectDesignRules dr)
@@ -787,7 +1133,7 @@ oaRect* RouteGeometry::createVia(Cell* currCell, ProjectDesignRules dr,
         //if more via layers, this will need to be changed
          unsigned int h, v, layer;
         currCell->getPosition(&h, &v, &layer);
-        int viaLayerIndex = layer / 2; //layers 0 and 1 map to 0th via layer, then 1..
+        int viaLayerIndex; //layers 0 and 1 map to 0th via layer, then 1..
 		if(layer == 0)
 			viaLayerIndex = 0;
 		else

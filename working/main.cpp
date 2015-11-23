@@ -48,6 +48,10 @@ int main(int argc, char** argv)
     DesignInfo designInfo;
     InputOutputManipulator::ReadInputArguments(argv, designInfo);
     oaDesign* design= InputOutputManipulator::ReadOADesign(designInfo);
+	oaTech* tech = design->getTech();
+	//oaUInt4 num = tech->getDBUPerUU()
+	oaUInt4 num = tech->getDBUPerUU(oaViewType::get(oacMaskLayout));
+	cout << "DBU per UU: " << num << endl;
     
     //now, get the design rule input
     cout << "Reading design rules..." << endl;

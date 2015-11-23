@@ -16,6 +16,7 @@ class RouteGeometry {
 public:
     RouteGeometry();
     void mazeToGeometry(Grid* grid, oaDesign* design,ProjectDesignRules dr);
+	void mazeToGeometry_bidirectional(Grid* grid, oaDesign* design, ProjectDesignRules dr, int layer);
     virtual ~RouteGeometry();
 //    bool CreateViaIfNeeded(Cell* currCell, Grid* grid, oaDesign* design,
 //                           ProjectDesignRules dr);
