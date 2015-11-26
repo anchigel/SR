@@ -128,14 +128,14 @@ oaDesign* InputOutputManipulator::ReadOADesign(DesignInfo designInfo)
     layer =  oaLayer::find(tech, "via1");
     if (layer==NULL) 
     {
-      cout << "Creating via1 layer\n";
+      //cout << "Creating via1 layer\n";
       oaPhysicalLayer::create(tech, "via1", VIA_LAYER_NUMBERS[0], oacMetalMaterial, VIA_LAYER_NUMBERS[0]);
     }
 	
 	layer =  oaLayer::find(tech, "via2");
     if (layer==NULL) 
     {
-      cout << "Creating via2 layer\n";
+      //cout << "Creating via2 layer\n";
       oaPhysicalLayer::create(tech, "via2", VIA_LAYER_NUMBERS[1], oacMetalMaterial, VIA_LAYER_NUMBERS[1]);
     }
 	
@@ -143,7 +143,7 @@ oaDesign* InputOutputManipulator::ReadOADesign(DesignInfo designInfo)
     layer =  oaLayer::find(tech, "metal2");
     if (layer==NULL) 
     {
-      cout << "Creating metal2 layer\n";
+      //cout << "Creating metal2 layer\n";
       oaPhysicalLayer::create(tech, "metal2", METAL_LAYERS_INFO[1].layerNum, 
                               oacMetalMaterial, METAL_LAYERS_INFO[1].layerNum);
     }
@@ -152,7 +152,7 @@ oaDesign* InputOutputManipulator::ReadOADesign(DesignInfo designInfo)
     layer =  oaLayer::find(tech, "metal3");
     if (layer==NULL) 
     {
-      cout << "Creating metal3 layer\n";
+      //cout << "Creating metal3 layer\n";
       oaPhysicalLayer::create(tech, "metal3", METAL_LAYERS_INFO[2].layerNum, 
                               oacMetalMaterial, METAL_LAYERS_INFO[2].layerNum);
     }
@@ -199,7 +199,7 @@ void InputOutputManipulator::GetCellNames(DesignInfo designInfo,
     } 
     else 
     {
-        cout << "Library " << libraryPath << "is not present." << endl;
+        //cout << "Library " << libraryPath << "is not present." << endl;
     }
     oaDesign *view = oaDesign::open(libName, cellName, viewName,'r');//change r to a to write
     oaIter<oaInstHeader> headers(view->getTopBlock()->getInstHeaders());

@@ -30,10 +30,10 @@ ProjectDesignRules::ProjectDesignRules(const string designRuleFilename) {
     infile.open(designRuleFilename.c_str());
 
     if (!infile) {
-        cout << "There was a problem opening design rule file "
+        /*cout << "There was a problem opening design rule file "
              << designRuleFilename
              << " for reading."
-             << endl;
+             << endl;*/
         exit(1);
     }
 
@@ -169,7 +169,7 @@ bool ProjectDesignRules::setMetal3Direction(char dir) {
 }
 
 void ProjectDesignRules::print() {   
-    cout << "Design rules in DBU (assumed 10 DBU = 1 nm):" << endl
+   /* cout << "Design rules in DBU (assumed 10 DBU = 1 nm):" << endl
          << "... minimum metal width: " << __metalWidthRule << endl
          << "... minimum metal spacing: " << __metalSpaceRule << endl
          << "... minimum contact/via extension: " << __contactViaExtensionRule << endl
@@ -177,5 +177,5 @@ void ProjectDesignRules::print() {
          << "... via dimensions: " << __viaDimensionRule << " * " << __viaDimensionRule << endl
          << "... metal1 direction: " << __metal1_direction << endl
          << "... metal2 direction: " << __metal2_direction << endl
-         << "... metal3 direction: " << __metal3_direction << endl;
+         << "... metal3 direction: " << __metal3_direction << endl;*/
 }

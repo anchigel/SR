@@ -15,10 +15,12 @@
 struct METAL_LAYER_INFO
 {
     int layerNum;
-    bool vertical;//if true then vertical , otherwise horizontal
+    bool vertical;//if true then vertical
+	bool horizontal;
 };
-static METAL_LAYER_INFO METAL_LAYERS_INFO[]={{8,true},{12,false},{18,true}};
-static int VIA_LAYER_NUMBERS[]={11, 15};
+//static METAL_LAYER_INFO METAL_LAYERS_INFO[]={{11,true,false},{13,false,false},{15,true,false}};
+static METAL_LAYER_INFO METAL_LAYERS_INFO[]={{8,false,false},{12,false,false},{14,false,false}};
+static int VIA_LAYER_NUMBERS[]={11, 13};
 #define PURPOSE_NUM 1
 
 #endif	/* DEFINITIONS_H */
